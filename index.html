@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Faisal Ahmed Shariff | Founder & Builder</title>
+  <meta name="description" content="20-year-old entrepreneur from Bengaluru building CRM platforms that compete with Zoho and Salesforce." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* ====================================================================
+       TOKENS — DARK (default)
+    ==================================================================== */
+    :root {
+      --bg: #080c10;
+      --fg: rgba(255, 255, 255, 0.95);
+      --fg-muted: rgba(255, 255, 255, 0.85);
+      --fg-light: rgba(255, 255, 255, 0.6);
+      --border: rgba(255, 255, 255, 0.12);
+      --card-bg: rgba(255, 255, 255, 0.04);
+      --primary: #4af0c4;
+      --primary-dim: rgba(74,240,196,0.13);
+      --photo-shadow: 0 0 0 3px rgba(74,240,196,0.22), 0 28px 80px rgba(0,0,0,0.75);
+      --card-shadow: 0 20px 64px rgba(0,0,0,0.55);
+      --toggle-bg: rgba(255, 255, 255, 0.06);
+      --toggle-border: rgba(255, 255, 255, 0.12);
+    }
+    html.light {
+      --bg: transparent;           /* gradient handles it */
+      --fg: #0a0e14;
+      --fg-muted: rgba(10, 14, 20, 0.75);
+      --fg-light: rgba(10, 14, 20, 0.52);
+      --border: rgba(10, 14, 20, 0.12);
+      --card-bg: #ffffff;
+      --primary: #0059d1;
+      --primary-dim: rgba(0,89,209,0.10);
+      --photo-shadow: 0 0 0 3px rgba(0,89,209,0.18), 0 28px 64px rgba(0,0,0,0.14);
+      --card-shadow: 0 8px 40px rgba(0,0,0,0.09);
+      --toggle-bg: rgba(255, 255, 255, 0.55);
+      --toggle-border: rgba(10,14,20,0.12);
+    }
+
+    /* ====================================================================
+       RESET & BASE
+    ==================================================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #080c10;
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: color 0.4s;
+    }
+
+    /* Light body uses a full-page gradient */
+    html.light body {
+      background: linear-gradient(
+        135deg,
+        #b8f0e8 0%,
+        #a0d4f5 22%,
+        #b8c8f8 48%,
+        #d4b0f0 72%,
+        #f0b8d8 100%
+      );
+      background-attachment: fixed;
+    }
+    html.light body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background: rgba(255,255,255,0.18);
+      pointer-events: none;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+    button { cursor: pointer; font-family: inherit; background: none; border: none; color: inherit; }
+    ::selection { background: var(--primary); color: #000; }
+
+    /* ====================================================================
+       LOADER
+    ==================================================================== */
+    #loader {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #080c10;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.7s ease;
+    }
+    #loader.hide { opacity: 0; pointer-events: none; }
+    .loader-count {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(80px, 18vw, 240px);
+      font-weight: 800; color: #f0f4f8; line-height: 1;
+    }
+    .loader-pct { font-size: 0.34em; vertical-align: super; opacity: 0.38; margin-left: 0.06em; }
+
+    /* ====================================================================
+       ANIMATED BLOB BAND — dark mode: scrolls right → left
+    ==================================================================== */
+    .blob-band {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none; overflow: hidden;
+    }
+    .blob-band svg {
+      position: absolute; top: -30%; left: 0;
+      width: 260vw; height: 160%;
+      opacity: 0;
+      animation: bandSlide 52s linear infinite;
+      transition: opacity 0.6s;
+    }
+    body.loaded .blob-band svg { opacity: 1; }
+    html.light .blob-band svg  { opacity: 0 !important; } /* light uses CSS gradient instead */
+    @keyframes bandSlide {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    .grain {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.032;
+    }
+    html.light .grain { opacity: 0.016; }
+
+    .grid-lines {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    }
+    .grid-lines svg { width: 100%; height: 100%; }
+
+    /* ====================================================================
+       HEADER
+    ==================================================================== */
+    header {
+      position: fixed; top: 0; left: 0; width: 100%;
+      z-index: 200;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 22px 40px;
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      backdrop-filter: blur(0px);
+      -webkit-backdrop-filter: blur(0px);
+      transition: background 0.3s, padding 0.3s, border-color 0.3s, backdrop-filter 0.3s;
+    }
+    header.scrolled {
+      padding: 8px 40px;
+      background: rgba(0, 0, 0, 0.12);
+      border-bottom: none;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    html.light header.scrolled {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Logo */
+    .logo {
+      display: flex; align-items: center; gap: 11px;
+      justify-self: start;
+    }
+    .logo-box {
+      width: 36px; height: 36px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.25s;
+    }
+    .logo-box:hover { border-color: var(--primary); }
+    .logo-box svg { width: 16px; height: 16px; stroke: var(--fg); }
+    .logo-name {
+      font-size: 1.05rem; font-weight: 600;
+      letter-spacing: -0.01em; color: var(--fg);
+    }
+
+    /* Centre social icons */
+    .header-socials {
+      display: flex; gap: 18px; align-items: center;
+      justify-self: center;
+    }
+    .header-socials a {
+      color: var(--fg-muted);
+      transition: color 0.2s, transform 0.2s;
+      display: flex; align-items: center;
+    }
+    .header-socials a:hover { color: var(--fg); transform: translateY(-2px); }
+    .header-socials svg { width: 18px; height: 18px; }
+
+    /* Hamburger */
+    .hamburger {
+      display: flex; flex-direction: column; gap: 5px;
+      padding: 6px; justify-self: end;
+    }
+    .hamburger span {
+      display: block; width: 22px; height: 1.5px;
+      background: var(--fg); border-radius: 2px; transition: all 0.3s;
+    }
+
+    /* Full-screen overlay menu */
+    #mobile-menu {
+      display: none; position: fixed; inset: 0; z-index: 300;
+      background: var(--bg);
+      flex-direction: column; align-items: flex-start; justify-content: center;
+      padding: 60px; gap: 6px;
+    }
+    html.light #mobile-menu { background: #b8f0e8; }
+    #mobile-menu.open { display: flex; }
+    #mobile-menu a {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 7vw, 4.5rem); font-weight: 800;
+      color: var(--fg-muted); line-height: 1.2; transition: color 0.2s;
+    }
+    #mobile-menu a:hover { color: var(--fg); }
+    .menu-close {
+      position: absolute; top: 26px; right: 38px;
+      font-size: 2rem; opacity: 0.45; transition: opacity 0.2s;
+    }
+    .menu-close:hover { opacity: 1; }
+
+    /* ====================================================================
+       FLOATING CONTROLS
+    ==================================================================== */
+    /* Bottom-left: day/night toggle */
+    #theme-toggle {
+      position: fixed; bottom: 28px; left: 28px; z-index: 150;
+      width: 50px; height: 50px; border-radius: 50%;
+      background: var(--toggle-bg);
+      border: 1px solid var(--toggle-border);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--fg-muted);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transition: border-color 0.22s, color 0.22s, transform 0.22s, background 0.4s;
+    }
+    #theme-toggle:hover {
+      border-color: var(--primary); color: var(--primary); transform: scale(1.1);
+    }
+    #theme-toggle svg { width: 17px; height: 17px; }
+
+    /* ====================================================================
+       HERO — centered, clean, circular photo + name below
+    ==================================================================== */
+    #hero {
+      position: relative; z-index: 10;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 90px 24px 44px;
+      text-align: center;
+    }
+
+    /* Circular photo */
+    .hero-photo-wrap {
+      position: relative;
+      width: clamp(140px, 18vw, 200px);
+      height: clamp(140px, 18vw, 200px);
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: var(--photo-shadow);
+      margin-bottom: 22px;
+      flex-shrink: 0;
+      animation: photoIn 1s cubic-bezier(0.22,1,0.36,1) both;
+      animation-delay: 0.1s;
+    }
+    @keyframes photoIn {
+      from { opacity: 0; transform: scale(0.86) translateY(18px); }
+      to   { opacity: 1; transform: none; }
+    }
+    /* Spinning orbit rings */
+    .orbit {
+      position: absolute; inset: -14px; border-radius: 50%;
+      border: 1px solid var(--primary); opacity: 0.24;
+      animation: spin 20s linear infinite; pointer-events: none;
+    }
+    .orbit-2 {
+      position: absolute; inset: -26px; border-radius: 50%;
+      border: 1px dashed var(--primary); opacity: 0.10;
+      animation: spin 32s linear infinite reverse; pointer-events: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hero-photo-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center 8%; display: block;
+      transition: transform 0.5s ease;
+    }
+    .hero-photo-wrap:hover img { transform: scale(1.04); }
+
+    /* Star badge */
+    .photo-star {
+      position: absolute; top: -6px; right: -6px; z-index: 5;
+      animation: starSpin 6s ease-in-out infinite;
+    }
+    @keyframes starSpin {
+      0%,100% { transform: scale(1) rotate(0deg); }
+      50%      { transform: scale(1.12) rotate(20deg); }
+    }
+
+    /* Name */
+    .hero-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.4rem, 7vw, 6.2rem);
+      line-height: 0.95; letter-spacing: -0.03em;
+      color: var(--fg);
+      margin-bottom: 12px;
+      animation: slideUp 1s cubic-bezier(0.22,1,0.36,1) both;
+      animation-delay: 0.22s;
+    }
+    .hero-name .outline-part {
+      color: transparent;
+      -webkit-text-stroke: 1.5px var(--fg);
+      text-stroke: 1.5px var(--fg);
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .hero-sub {
+      font-size: clamp(0.88rem, 1.8vw, 1.05rem);
+      color: var(--primary);
+      font-style: italic;
+      margin-bottom: 12px;
+      animation: slideUp 1s cubic-bezier(0.22,1,0.36,1) both;
+      animation-delay: 0.34s;
+    }
+
+    .hero-greeting {
+      font-size: clamp(0.88rem, 1.8vw, 1.02rem);
+      color: var(--fg-muted);
+      max-width: 580px; line-height: 1.65; font-weight: 400;
+      margin-bottom: 22px;
+      animation: slideUp 1s cubic-bezier(0.22,1,0.36,1) both;
+      animation-delay: 0.44s;
+    }
+    .hero-greeting a { color: var(--primary); font-weight: 600; }
+
+    /* Social media pill in hero */
+    .hero-social-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 10px 24px;
+      margin-bottom: 28px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      animation: slideUp 1s cubic-bezier(0.22,1,0.36,1) both;
+      animation-delay: 0.5s;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    html.light .hero-social-pill {
+      background: rgba(10, 14, 20, 0.05);
+    }
+    .hero-social-pill a {
+      color: var(--fg-muted);
+      transition: color 0.2s, transform 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-social-pill a:hover {
+      color: var(--fg);
+      transform: translateY(-2px);
+    }
+    .hero-social-pill svg {
+      width: 19px;
+      height: 19px;
+    }
+
+    .hero-cta {
+      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+      animation: slideUp 1s cubic-bezier(0.22,1,0.36,1) both;
+      animation-delay: 0.58s;
+      margin-bottom: 44px;
+    }
+    .btn-ghost {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--fg); border-radius: 40px;
+      padding: 11px 28px; font-size: 0.88rem; font-weight: 600;
+      transition: border-color 0.2s, color 0.2s, transform 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+
+    /* Essentials strip */
+    .essentials-strip {
+      width: 100%; max-width: 860px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding-top: 22px; border-top: 1px solid var(--border);
+      animation: slideUp 1s cubic-bezier(0.22,1,0.36,1) both;
+      animation-delay: 0.64s;
+      justify-content: center;
+    }
+    .essentials-label {
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-muted);
+    }
+    .essentials-sub { font-size: 0.78rem; color: var(--fg-light); font-style: italic; }
+    .essentials-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tag-pill {
+      border: 1.5px solid var(--border); border-radius: 32px;
+      padding: 7px 18px; font-size: 0.88rem; font-weight: 600;
+      color: var(--fg); background: transparent;
+      transition: border-color 0.22s, color 0.22s, transform 0.22s;
+    }
+    .tag-pill:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+
+    /* ====================================================================
+       SECTIONS COMMON
+    ==================================================================== */
+    section { position: relative; z-index: 10; padding: 90px 40px; }
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.9rem, 5vw, 3.8rem); font-weight: 400;
+      text-align: center; margin-bottom: 48px;
+      letter-spacing: -0.02em; color: var(--fg);
+    }
+
+    /* ====================================================================
+       ABOUT
+    ==================================================================== */
+    #about-section { border-top: 1px solid var(--border); }
+    .about-grid {
+      max-width: 940px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1.6fr; gap: 72px; align-items: start;
+    }
+    .about-left h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 400;
+      line-height: 1.25; letter-spacing: -0.02em; color: var(--fg);
+      position: sticky; top: 96px;
+    }
+    .about-right p {
+      font-size: 1rem; color: var(--fg-muted); line-height: 1.8; margin-bottom: 20px;
+    }
+    .about-right p:last-child { margin-bottom: 0; }
+    .about-right p strong { color: var(--fg); font-weight: 600; }
+
+    /* ====================================================================
+       UPDATES / TIMELINE
+    ==================================================================== */
+    #updates-section { border-top: 1px solid var(--border); }
+    .year-selector-wrap {
+      width: 320px; max-width: 100%; margin: 0 auto 44px;
+      position: relative; overflow: hidden; border-radius: 48px;
+    }
+    .year-selector-wrap::before,.year-selector-wrap::after {
+      content: ''; position: absolute; top:0; bottom:0; width:36px;
+      pointer-events:none; z-index:2;
+    }
+    .year-selector-wrap::before { left:0; background:linear-gradient(to right,var(--bg) 15%,transparent); }
+    .year-selector-wrap::after  { right:0; background:linear-gradient(to left,var(--bg) 15%,transparent); }
+    html.light .year-selector-wrap::before { background:linear-gradient(to right,#b8f0e8 15%,transparent); }
+    html.light .year-selector-wrap::after  { background:linear-gradient(to left,#d4b0f0 15%,transparent); }
+
+    .year-selector {
+      display:flex; gap:4px; overflow-x:auto;
+      padding:8px 18px; scrollbar-width:none;
+    }
+    .year-selector::-webkit-scrollbar { display:none; }
+    .year-btn {
+      flex-shrink:0; padding:6px 14px; border-radius:20px;
+      font-size:0.92rem; font-weight:500; color:var(--fg-muted);
+      transition:background 0.2s,color 0.2s; white-space:nowrap;
+    }
+    .year-btn:hover { color:var(--fg); }
+    .year-btn.active { background:var(--fg); color:var(--bg); }
+    html.light .year-btn.active { color:#ffffff; }
+
+    .timeline-list { max-width:720px; margin:0 auto; display:none; }
+    .timeline-list.active { display:block; }
+    .timeline-entry {
+      display:grid; grid-template-columns:80px 1fr;
+      gap:22px; border-top:1px solid var(--border); padding:26px 0;
+    }
+    .timeline-month {
+      font-size:0.76rem; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.1em; color:var(--fg-muted); padding-top:3px;
+    }
+    .timeline-content h4 { font-size:0.98rem; font-weight:600; line-height:1.5; margin-bottom:7px; }
+    .timeline-content p  { font-size:0.88rem; color:var(--fg-muted); line-height:1.65; }
+    .timeline-tag {
+      display:inline-block; background:var(--primary-dim);
+      border:1px solid rgba(74,240,196,0.25); border-radius:4px;
+      padding:2px 8px; font-size:0.72rem; font-weight:700;
+      color:var(--primary); margin-top:9px;
+    }
+    html.light .timeline-tag { border-color:rgba(0,89,209,0.22); }
+
+    /* ====================================================================
+       VENTURES SLIDER
+    ==================================================================== */
+    #ventures-section { padding:90px 0; border-top:1px solid var(--border); }
+    #ventures-section .section-title { padding:0 40px; }
+    .cards-scroll-wrap { overflow:hidden; position:relative; }
+    .cards-scroll-wrap::before,.cards-scroll-wrap::after {
+      content:''; position:absolute; top:0; bottom:0;
+      width:56px; pointer-events:none; z-index:2;
+    }
+    .cards-scroll-wrap::before { left:0; background:linear-gradient(to right,var(--bg) 8%,transparent); }
+    .cards-scroll-wrap::after  { right:0; background:linear-gradient(to left,var(--bg) 8%,transparent); }
+    html.light .cards-scroll-wrap::before { background:linear-gradient(to right,#b8f0e8 8%,transparent); }
+    html.light .cards-scroll-wrap::after  { background:linear-gradient(to left,#f0b8d8 8%,transparent); }
+
+    .cards-scroll {
+      display:flex; gap:18px; overflow-x:auto;
+      padding:8px 40px 30px; scrollbar-width:none; cursor:grab;
+      -webkit-overflow-scrolling: touch;
+    }
+    .cards-scroll::-webkit-scrollbar { display:none; }
+    .cards-scroll.dragging { cursor:grabbing; }
+    .card {
+      flex-shrink:0; width:340px; min-width:260px; height:370px;
+      background:var(--card-bg); border-radius:14px; padding:22px;
+      display:flex; flex-direction:column;
+      border:1px solid var(--border);
+      transition:box-shadow 0.3s,transform 0.3s; overflow:hidden;
+    }
+    .card:hover { box-shadow:var(--card-shadow); transform:scale(1.025); }
+    .card-img {
+      width:100%; height:170px; border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      margin-bottom:18px; overflow:hidden;
+    }
+    .card-img-placeholder { font-family:'DM Serif Display',serif; font-size:2.5rem; color:rgba(255,255,255,0.4); }
+    .card-title {
+      font-family:'DM Serif Display',serif;
+      font-size:1.05rem; font-weight:400; text-align:center; line-height:1.4; margin-bottom:auto;
+    }
+    .card-meta { font-size:0.74rem; color:var(--fg-light); text-align:center; margin-top:14px; }
+
+    /* ====================================================================
+       CONTACT
+    ==================================================================== */
+    #contact-section { border-top:1px solid var(--border); }
+    .contact-inner { max-width:580px; margin:0 auto; text-align:center; }
+    .contact-inner h2 {
+      font-family:'DM Serif Display',serif;
+      font-size:clamp(1.9rem,5vw,3.4rem); font-weight:400;
+      margin-bottom:14px; letter-spacing:-0.02em;
+    }
+    .contact-inner p { font-size:0.98rem; color:var(--fg-muted); line-height:1.6; margin-bottom:36px; }
+    .contact-links { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+    .contact-link-item {
+      display:flex; align-items:center; gap:8px;
+      border:1px solid var(--border); border-radius:48px;
+      padding:10px 22px; font-size:0.86rem; font-weight:600; color:var(--fg);
+      transition:border-color 0.2s,color 0.2s,transform 0.2s;
+    }
+    .contact-link-item:hover { border-color:var(--primary); color:var(--primary); transform:translateY(-2px); }
+    .contact-link-item svg { width:14px; height:14px; flex-shrink:0; }
+
+    /* ====================================================================
+       FOOTER
+    ==================================================================== */
+    footer {
+      padding:22px 40px; border-top:1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:center;
+      font-size:0.76rem; color:var(--fg-light);
+      position:relative; z-index:10;
+    }
+
+    /* ====================================================================
+       SCROLL REVEAL
+    ==================================================================== */
+    .reveal {
+      opacity:0; transform:translateY(28px);
+      transition:opacity 0.72s cubic-bezier(0.22,1,0.36,1), transform 0.72s cubic-bezier(0.22,1,0.36,1);
+    }
+    .reveal.visible { opacity:1; transform:none; }
+    .reveal-delay-1 { transition-delay:0.1s; }
+    .reveal-delay-2 { transition-delay:0.21s; }
+    .reveal-delay-3 { transition-delay:0.32s; }
+    .reveal-delay-4 { transition-delay:0.43s; }
+
+    /* ====================================================================
+       RESPONSIVE
+    ==================================================================== */
+    @media (max-width: 1024px) {
+      .about-grid { gap: 48px; }
+    }
+
+    @media (max-width: 768px) {
+      /* Header */
+      header { padding: 18px 20px; grid-template-columns: 1fr auto; }
+      header.scrolled { padding: 6px 20px; }
+      .header-socials { display: none; }
+
+      /* Hero */
+      #hero { padding: 80px 20px 36px; }
+      .hero-photo-wrap { width: clamp(130px, 30vw, 170px); height: clamp(130px, 30vw, 170px); }
+      .hero-name { font-size: clamp(2rem, 9vw, 3.8rem); }
+      .essentials-strip { flex-direction: column; align-items: center; gap: 10px; }
+
+      /* Sections */
+      section { padding: 60px 20px; }
+      #ventures-section { padding: 60px 0; }
+      #ventures-section .section-title { padding: 0 20px; }
+      .cards-scroll { padding: 8px 20px 28px; }
+
+      /* About */
+      .about-grid { grid-template-columns: 1fr; gap: 28px; }
+      .about-left h2 { position: static; text-align: center; }
+      .about-right p  { text-align: center; }
+
+      /* Floating controls */
+      #theme-toggle { bottom: 20px; left: 20px; width: 44px; height: 44px; }
+
+      /* Footer */
+      footer { flex-direction: column; gap: 8px; text-align: center; padding: 20px; }
+
+      /* Contact */
+      .contact-link-item { padding: 9px 16px; font-size: 0.82rem; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-name { font-size: clamp(1.8rem, 10vw, 2.8rem); }
+      .hero-photo-wrap { width: 140px; height: 140px; }
+      .hero-social-pill { gap: 16px; padding: 8px 18px; margin-bottom: 22px; }
+      .hero-social-pill svg { width: 17px; height: 17px; }
+      .hero-cta { flex-direction: column; align-items: center; width: 100%; }
+      .btn-ghost { width: 100%; max-width: 280px; justify-content: center; }
+      .card { width: 80vw; min-width: 240px; height: 340px; }
+    }
+
+    /* ---- CUSTOM SECTIONS ---- */
+    .custom-section-container {
+      border-top: 1px solid var(--border);
+      padding: 90px 40px;
+      position: relative;
+      z-index: 10;
+    }
+    @media (max-width: 768px) {
+      .custom-section-container {
+        padding: 60px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOADER -->
+  <div id="loader">
+    <div class="loader-count" id="loader-count">0<span class="loader-pct">%</span></div>
+  </div>
+
+  <!-- ANIMATED BLOB BAND (dark mode only) -->
+  <div class="blob-band" aria-hidden="true">
+    <svg viewBox="0 0 6000 1400" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <defs><filter id="gb"><feGaussianBlur stdDeviation="88"/></filter></defs>
+      <g filter="url(#gb)">
+        <ellipse cx="300"  cy="620" rx="430" ry="210" fill="#005048" transform="rotate(32 300 620)"/>
+        <ellipse cx="850"  cy="760" rx="660" ry="330" fill="#006e5a" transform="rotate(14 850 760)"/>
+        <ellipse cx="1450" cy="510" rx="310" ry="130" fill="#003d80" transform="rotate(-16 1450 510)"/>
+        <ellipse cx="1750" cy="860" rx="560" ry="200" fill="#6b0050" transform="rotate(-11 1750 860)"/>
+        <ellipse cx="2150" cy="610" rx="290" ry="105" fill="#900020" transform="rotate(-38 2150 610)"/>
+        <ellipse cx="1950" cy="960" rx="350" ry="115" fill="#004a20" transform="rotate(-40 1950 960)"/>
+        <ellipse cx="2250" cy="800" rx="470" ry="285" fill="#7a2060" transform="rotate(-18 2250 800)"/>
+        <ellipse cx="2650" cy="1060" rx="730" ry="270" fill="#7a4200"/>
+        <ellipse cx="2950" cy="840" rx="410" ry="165" fill="#6a4200" transform="rotate(-20 2950 840)"/>
+        <!-- Mirror for seamless loop -->
+        <ellipse cx="3300"  cy="620" rx="430" ry="210" fill="#005048" transform="rotate(32 3300 620)"/>
+        <ellipse cx="3850"  cy="760" rx="660" ry="330" fill="#006e5a" transform="rotate(14 3850 760)"/>
+        <ellipse cx="4450" cy="510" rx="310" ry="130" fill="#003d80" transform="rotate(-16 4450 510)"/>
+        <ellipse cx="4750" cy="860" rx="560" ry="200" fill="#6b0050" transform="rotate(-11 4750 860)"/>
+        <ellipse cx="5150" cy="610" rx="290" ry="105" fill="#900020" transform="rotate(-38 5150 610)"/>
+        <ellipse cx="4950" cy="960" rx="350" ry="115" fill="#004a20" transform="rotate(-40 4950 960)"/>
+        <ellipse cx="5250" cy="800" rx="470" ry="285" fill="#7a2060" transform="rotate(-18 5250 800)"/>
+        <ellipse cx="5650" cy="1060" rx="730" ry="270" fill="#7a4200"/>
+        <ellipse cx="5950" cy="840" rx="410" ry="165" fill="#6a4200" transform="rotate(-20 5950 840)"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- GRAIN -->
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- GRID LINES -->
+  <div class="grid-lines" aria-hidden="true">
+    <svg viewBox="0 0 1513 1120" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g opacity="0.04" stroke="currentColor">
+        <line x1="0.5"    y1="0" x2="0.5"    y2="1120"/>
+        <line x1="168.5"  y1="0" x2="168.5"  y2="1120"/>
+        <line x1="336.5"  y1="0" x2="336.5"  y2="1120"/>
+        <line x1="504.5"  y1="0" x2="504.5"  y2="1120"/>
+        <line x1="672.5"  y1="0" x2="672.5"  y2="1120"/>
+        <line x1="840.5"  y1="0" x2="840.5"  y2="1120"/>
+        <line x1="1008.5" y1="0" x2="1008.5" y2="1120"/>
+        <line x1="1176.5" y1="0" x2="1176.5" y2="1120"/>
+        <line x1="1344.5" y1="0" x2="1344.5" y2="1120"/>
+        <line x1="1512.5" y1="0" x2="1512.5" y2="1120"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- =================================================================
+       HEADER
+  ================================================================== -->
+  <header>
+    <a href="/" class="logo">
+      <div class="logo-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="7" y1="17" x2="17" y2="7"/>
+          <polyline points="7 7 17 7 17 17"/>
+        </svg>
+      </div>
+      <span class="logo-name">faisal.</span>
+    </a>
+
+    <!-- Centre: social icons (desktop) -->
+    <nav class="header-socials" aria-label="Social links">
+      <a href="https://www.linkedin.com/in/faisal-shariff-2b1127315" id="h-linkedin" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+          <rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
+        </svg>
+      </a>
+      <a href="https://www.instagram.com/fa_is_al_2829?igsh=OHc5MmZ3eXpncm4=" id="h-instagram" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+      </a>
+      <a href="mailto:faashariff2829@gmail.com" id="h-email" aria-label="Email">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
+        </svg>
+      </a>
+      <a href="https://github.com/FaisalAhmedShariff" id="h-github" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+        </svg>
+      </a>
+    </nav>
+
+    <button class="hamburger" id="hamburger" aria-label="Open menu">
+      <span></span><span></span>
+    </button>
+  </header>
+
+  <!-- MOBILE MENU -->
+  <div id="mobile-menu" role="dialog" aria-modal="true">
+    <button class="menu-close" id="menu-close" aria-label="Close menu">×</button>
+    <a href="#about-section"   class="mobile-nav-link">about</a>
+    <a href="#updates-section" class="mobile-nav-link">updates</a>
+    <a href="#ventures-section" class="mobile-nav-link">ventures</a>
+    <a href="#contact-section" class="mobile-nav-link">contact</a>
+  </div>
+
+  <!-- FLOATING: Day/Night — bottom left -->
+  <button id="theme-toggle" aria-label="Toggle light / dark mode">
+    <!-- Shown in dark mode → click to go light -->
+    <svg id="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <!-- Shown in light mode → click to go dark -->
+    <svg id="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1"  x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22"   x2="5.64" y2="5.64"/>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78"  x2="5.64" y2="18.36"/>
+      <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"/>
+    </svg>
+  </button>
+
+  <!-- =================================================================
+       HERO
+  ================================================================== -->
+  <section id="hero">
+
+    <div class="hero-photo-wrap">
+      <div class="orbit"></div>
+      <div class="orbit-2"></div>
+      <span class="photo-star" aria-hidden="true">
+        <svg width="36" height="36" viewBox="0 0 60 60" fill="none">
+          <path d="M34.687 55.723L40.295 40.298L55.71 34.692C56.68 34.346 57.517 33.709 58.106 32.868C58.694 32.027 59.006 31.025 59 30C59.006 28.975 58.694 27.972 58.106 27.132C57.517 26.291 56.68 25.654 55.71 25.309L40.298 19.719L34.69 4.284C34.332 3.32 33.693 2.495 32.855 1.912C32.017 1.329 31.02 1.017 30 1.017C28.98 1.017 27.983 1.329 27.145 1.912C26.307 2.495 25.668 3.32 25.31 4.277L19.719 19.702L4.284 25.31C3.32 25.668 2.495 26.307 1.912 27.145C1.329 27.983 1.017 28.98 1.017 30C1.017 31.02 1.329 32.017 1.912 32.855C2.495 33.693 3.32 34.332 4.284 34.69L19.702 40.281L25.31 55.716C25.668 56.68 26.307 57.505 27.145 58.088C27.983 58.671 28.98 58.983 30 58.983C31.02 58.983 32.017 58.671 32.855 58.088C33.693 57.505 34.332 56.68 34.687 55.723Z"
+            fill="var(--primary)" fill-opacity="0.75" stroke="var(--primary)" stroke-width="0.5"/>
+        </svg>
+      </span>
+      <img src="assets/My picture.jpeg" alt="Faisal Ahmed Shariff — Founder" id="hero-photo-img" />
+    </div>
+
+    <h1 class="hero-name" id="hero-name">Faisal <span class="outline-part">Ahmed Shariff</span>.</h1>
+    
+    <p class="hero-greeting" id="hero-greeting">
+      I've gotten your attention. Good. I'm Faisal, a 20 year old entrepreneur from Bengaluru building
+      <a href="#ventures-section">CRM platforms</a> that compete with Zoho and Salesforce.
+      Started in sales, never stopped building around it.
+    </p>
+
+    <!-- Social media pill -->
+    <div class="hero-social-pill" id="hero-socials">
+      <a href="https://www.linkedin.com/in/faisal-shariff-2b1127315" id="hero-linkedin" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="4.9" cy="4" r="2"/>
+          <rect x="3.4" y="7.7" width="3" height="11"/>
+          <path d="M19 7.7c-2.2 0-3.6 1.2-4.2 2.3v-2h-3v11h3v-5.8c0-1.5.3-3 2.1-3 1.8 0 1.9 1.7 1.9 3.1v5.7h3V13c0-3.4-.7-5.3-4.8-5.3z"/>
+        </svg>
+      </a>
+      <a href="https://www.instagram.com/fa_is_al_2829?igsh=OHc5MmZ3eXpncm4=" id="hero-instagram" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
+        </svg>
+      </a>
+      <a href="https://github.com/FaisalAhmedShariff" id="hero-github" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+        </svg>
+      </a>
+      <a href="mailto:faashariff2829@gmail.com" id="hero-email" aria-label="Email">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+      </a>
+    </div>
+
+    <div class="hero-cta" id="hero-cta">
+      <a href="#contact-section" class="btn-ghost">Say Hi!</a>
+      <a href="#about-section"   class="btn-ghost">Find out more</a>
+    </div>
+
+    <div class="essentials-strip">
+      <span class="essentials-label">The Essentials</span>
+      <span class="essentials-sub">Turns out, this is all I really need</span>
+      <div class="essentials-tags">
+        <span class="tag-pill">Building</span>
+        <span class="tag-pill">Networking</span>
+        <span class="tag-pill">Chai</span>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- =================================================================
+       ABOUT
+  ================================================================== -->
+  <section id="about-section">
+    <div class="about-grid">
+      <div class="about-left reveal" id="about-bold-wrap">
+        <h2>Builder.<br/>Founder.<br/>Entrepreneur.</h2>
+      </div>
+      <div class="about-right" id="about-paragraphs-wrap">
+        <p class="reveal">I'm a 20 year old entrepreneur based in Bengaluru, India.</p>
+        <p class="reveal reveal-delay-1">Before college started I was already deep in sales, bringing in clients for three digital marketing agencies and a web development agency. No theory, no classroom. Just real conversations with real business owners, learning how they think, what they need, and how deals actually get done.</p>
+        <p class="reveal reveal-delay-2">That's where the obsession started. I've met hundreds of business owners, sat across the table from people building serious companies, and realised early that the best way to learn business is to be in it.</p>
+        <p class="reveal reveal-delay-3">Now I co-lead two companies. <strong>ZIVO</strong> is an AI driven CRM competing in the space Zoho and Salesforce operate in. <strong>Clyxit</strong> is a vertical CRM built specifically for the construction and real estate industry. Both are being built by engineering teams I work closely with every day.</p>
+        <p class="reveal reveal-delay-4">I'm still a student. But everything that matters is being built outside the classroom.<br/><br/>I love connecting with founders, operators and people who are genuinely building things. If that's you, let's talk.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================================================================
+       UPDATES / TIMELINE
+  ================================================================== -->
+  <section id="updates-section">
+    <h2 class="section-title" id="updates-title">Updates</h2>
+    <div class="year-selector-wrap">
+      <div class="year-selector" id="year-selector">
+        <button class="year-btn" data-year="2023">2023</button>
+        <button class="year-btn" data-year="2024">2024</button>
+        <button class="year-btn active" data-year="2025">2025</button>
+        <button class="year-btn" data-year="2026">2026</button>
+      </div>
+    </div>
+    <div style="max-width:1160px;margin:0 auto;" id="timeline-lists-container">
+
+      <div class="timeline-list" data-year="2023">
+        <div class="timeline-entry">
+          <div class="timeline-month">Oct</div>
+          <div class="timeline-content">
+            <h4>Started running dropservicing operations.</h4>
+            <p>Launched a dropservicing model, onboarding the first of three digital marketing agencies. The real learning begins.</p>
+            <span class="timeline-tag">Operations</span>
+          </div>
+        </div>
+        <div class="timeline-entry">
+          <div class="timeline-month">Jul</div>
+          <div class="timeline-content">
+            <h4>Began mastering B2B sales fundamentals.</h4>
+            <p>Cold outreach, pitch decks, negotiation. Understanding how real buying decisions get made inside organisations.</p>
+            <span class="timeline-tag">Sales</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-list" data-year="2024">
+        <div class="timeline-entry">
+          <div class="timeline-month">Mar</div>
+          <div class="timeline-content">
+            <h4>Scaled to managing 3 agencies + 1 web dev agency.</h4>
+            <p>Running operations across multiple service lines. Learning cash flow, client delivery, and team coordination simultaneously.</p>
+            <span class="timeline-tag">Scale</span>
+          </div>
+        </div>
+        <div class="timeline-entry">
+          <div class="timeline-month">Mid</div>
+          <div class="timeline-content">
+            <h4>Launched TheSalesDude — personal sales agency.</h4>
+            <p>Built and ran a direct sales agency, personally driving client acquisition and pitching for service businesses.</p>
+            <span class="timeline-tag">Agency</span>
+          </div>
+        </div>
+        <div class="timeline-entry">
+          <div class="timeline-month">Nov</div>
+          <div class="timeline-content">
+            <h4>Started exploring AI tooling and automation workflows.</h4>
+            <p>Began research into how AI systems could replace manual work inside CRM pipelines and sales processes.</p>
+            <span class="timeline-tag">AI</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-list active" data-year="2025">
+        <div class="timeline-entry">
+          <div class="timeline-month">Feb</div>
+          <div class="timeline-content">
+            <h4>Joined first highly qualified AI engineering team.</h4>
+            <p>Began collaborating with a senior AI/ML team to prototype the ZIVO CRM intelligence layer.</p>
+            <span class="timeline-tag">AI Engineering</span>
+          </div>
+        </div>
+        <div class="timeline-entry">
+          <div class="timeline-month">Jul</div>
+          <div class="timeline-content">
+            <h4>Recruited second specialised engineering team for Clyxit.</h4>
+            <p>Onboarded a vertical software team with deep experience in real estate and construction workflows.</p>
+            <span class="timeline-tag">PropTech</span>
+          </div>
+        </div>
+        <div class="timeline-entry">
+          <div class="timeline-month">Dec</div>
+          <div class="timeline-content">
+            <h4>Both products reached internal MVP milestone.</h4>
+            <p>ZIVO and Clyxit hit their first internal milestones. Core feature sets functional, ready for early testers.</p>
+            <span class="timeline-tag">Milestone</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-list" data-year="2026">
+        <div class="timeline-entry">
+          <div class="timeline-month">Jan</div>
+          <div class="timeline-content">
+            <h4>ZIVO officially launched.</h4>
+            <p>ZIVO Automations formally launched — an AI-driven CRM built to challenge Zoho and Salesforce. <a href="https://zivoautomations.com" target="_blank" style="color:var(--primary)">zivoautomations.com ↗</a></p>
+            <span class="timeline-tag">Launch</span>
+          </div>
+        </div>
+        <div class="timeline-entry">
+          <div class="timeline-month">Jan</div>
+          <div class="timeline-content">
+            <h4>Clyxit officially launched.</h4>
+            <p>Clyxit launched as a vertical CRM purpose-built for construction and real estate. <a href="https://clyxit.com" target="_blank" style="color:var(--primary)">Clyxit.com ↗</a></p>
+            <span class="timeline-tag">Launch</span>
+          </div>
+        </div>
+        <div class="timeline-entry">
+          <div class="timeline-month">Now</div>
+          <div class="timeline-content">
+            <h4>Building. Shipping. Growing.</h4>
+            <p>Two companies, two engineering teams, one mission: build essential software for markets that still rely on legacy tools.</p>
+            <span class="timeline-tag">Active</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =================================================================
+       VENTURES
+  ================================================================== -->
+  <section id="ventures-section" style="padding:90px 0;">
+    <h2 class="section-title" id="ventures-title">Ventures</h2>
+    <div class="cards-scroll-wrap">
+      <div class="cards-scroll" id="cards-scroll">
+
+        <a target="_blank" href="https://zivoautomations.com" class="card">
+          <div class="card-img" style="background:#000;padding:0;overflow:hidden">
+            <img src="assets/zivo logo.jpeg" alt="ZIVO Automations logo" style="width:100%;height:100%;object-fit:cover;display:block;"/>
+          </div>
+          <h3 class="card-title">ZIVO — AI-Driven CRM Platform</h3>
+          <p class="card-meta">zivoautomations.com · 2026</p>
+        </a>
+
+        <a target="_blank" href="https://clyxit.com" class="card">
+          <div class="card-img" style="background:linear-gradient(135deg,#1a3a1a,#2d5a27,#1e4d1e)">
+            <div class="card-img-placeholder">CLYXIT</div>
+          </div>
+          <h3 class="card-title">Clyxit — Vertical CRM for Construction & Real Estate</h3>
+          <p class="card-meta">Clyxit.com · 2026</p>
+        </a>
+
+        <div class="card">
+          <div class="card-img" style="background:linear-gradient(135deg,#1a0a00,#3d1a00,#5c2e00);flex-direction:column;gap:6px">
+            <span style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:#f5a623;letter-spacing:0.05em;text-align:center;padding:0 16px">The<br/>SalesDude</span>
+          </div>
+          <h3 class="card-title">TheSalesDude — Sales Agency</h3>
+          <p class="card-meta">Founded & run by Faisal · 2024–2025</p>
+        </div>
+
+        <div class="card" style="border-style:dashed;display:flex;align-items:center;justify-content:center;background:transparent">
+          <div style="text-align:center">
+            <p style="font-size:2.2rem;color:var(--fg-muted);margin-bottom:10px">+</p>
+            <p style="font-family:'DM Serif Display',serif;font-size:0.95rem;color:var(--fg-muted)">More coming soon</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- =================================================================
+       CONTACT
+  ================================================================== -->
+  <section id="contact-section">
+    <div class="contact-inner">
+      <h2>Let's work together</h2>
+      <p>Got a bold idea or just want to talk about building something serious? Hit me up.</p>
+      <div class="contact-links">
+        <a href="https://www.linkedin.com/in/faisal-shariff-2b1127315" class="contact-link-item" id="linkedin-contact" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          LinkedIn
+        </a>
+        <a href="mailto:faashariff2829@gmail.com" class="contact-link-item" id="email-contact">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Email
+        </a>
+        <a href="https://www.instagram.com/fa_is_al_2829?igsh=OHc5MmZ3eXpncm4=" class="contact-link-item" id="instagram-contact" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          Instagram
+        </a>
+        <a href="https://github.com/FaisalAhmedShariff" class="contact-link-item" id="github-contact" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>© 2026 Faisal Ahmed Shariff</span>
+    <span>Bengaluru, India</span>
+  </footer>
+
+  <!-- =================================================================
+       JAVASCRIPT
+  ================================================================== -->
+  <script>
+    /* ---- SUPABASE PORTFOLIO INTEGRATION ---- */
+    const supabaseUrl = 'https://nesfzytfgswcvgsrruxo.supabase.co';
+    const supabaseKey = 'sb_publishable_zOQxpja5sMsQIXs6MgsMyA_6mNZ-Ffo';
+    const { createClient } = supabase;
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+    let dataLoaded = false;
+
+    // Helper: Map social platform names to SVGs (filled vs stroke)
+    function getSocialSvg(platform, filled = false) {
+      platform = platform.toLowerCase();
+      if (filled) {
+        if (platform === 'linkedin') return `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="4.9" cy="4" r="2"/><rect x="3.4" y="7.7" width="3" height="11"/><path d="M19 7.7c-2.2 0-3.6 1.2-4.2 2.3v-2h-3v11h3v-5.8c0-1.5.3-3 2.1-3 1.8 0 1.9 1.7 1.9 3.1v5.7h3V13c0-3.4-.7-5.3-4.8-5.3z"/></svg>`;
+        if (platform === 'instagram') return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>`;
+        if (platform === 'github') return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>`;
+        if (platform === 'email' || platform === 'mail') return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`;
+      } else {
+        if (platform === 'linkedin') return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>`;
+        if (platform === 'instagram') return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>`;
+        if (platform === 'github') return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>`;
+        if (platform === 'email' || platform === 'mail') return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`;
+      }
+      return '';
+    }
+
+    // Helper: Map venture names to specific styling or fallback gradients
+    function getVenturePlaceholderStyle(name) {
+      const lower = name.toLowerCase();
+      if (lower.includes('clyxit')) {
+        return {
+          bg: 'background:linear-gradient(135deg,#1a3a1a,#2d5a27,#1e4d1e)',
+          html: `<div class="card-img-placeholder">CLYXIT</div>`
+        };
+      }
+      if (lower.includes('salesdude')) {
+        return {
+          bg: 'background:linear-gradient(135deg,#1a0a00,#3d1a00,#5c2e00);flex-direction:column;gap:6px',
+          html: `<span style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:#f5a623;letter-spacing:0.05em;text-align:center;padding:0 16px">The<br/>SalesDude</span>`
+        };
+      }
+      // General fallback
+      return {
+        bg: 'background:linear-gradient(135deg,#1c2d3d,#2b3e55,#17212e)',
+        html: `<div class="card-img-placeholder" style="font-size:1.5rem;text-transform:uppercase">${name.split(' ')[0]}</div>`
+      };
+    }
+
+    async function loadPortfolioData() {
+      try {
+        // Fetch all data from Supabase tables
+        const [
+          configRes,
+          aboutRes,
+          timelineRes,
+          venturesRes,
+          customRes
+        ] = await Promise.all([
+          supabaseClient.from('portfolio_config').select('*'),
+          supabaseClient.from('about_paragraphs').select('*').order('sort_order', { ascending: true }),
+          supabaseClient.from('timeline_entries').select('*').order('sort_order', { ascending: true }),
+          supabaseClient.from('ventures').select('*').order('sort_order', { ascending: true }),
+          supabaseClient.from('custom_sections').select('*').order('sort_order', { ascending: true })
+        ]);
+
+        if (configRes.error) throw configRes.error;
+        if (aboutRes.error) throw aboutRes.error;
+        if (timelineRes.error) throw timelineRes.error;
+        if (venturesRes.error) throw venturesRes.error;
+        if (customRes.error) throw customRes.error;
+
+        // Map config table to a simple key-value object
+        const config = {};
+        configRes.data.forEach(item => {
+          config[item.key] = item.value;
+        });
+
+        // 1. Render Hero Name, Greeting, and Photo
+        if (config.hero_name_solid || config.hero_name_outline) {
+          const solid = config.hero_name_solid || '';
+          const outline = config.hero_name_outline || '';
+          document.getElementById('hero-name').innerHTML = `${solid} <span class="outline-part">${outline}</span>.`;
+          document.title = `${solid} ${outline} | Founder & Builder`;
+        }
+        if (config.hero_greeting) {
+          document.getElementById('hero-greeting').innerHTML = config.hero_greeting;
+        }
+        if (config.hero_photo_url) {
+          document.getElementById('hero-photo-img').src = config.hero_photo_url;
+        }
+
+        // Render Social Platforms
+        if (config.hero_socials && Array.isArray(config.hero_socials)) {
+          // Header navigation socials
+          const headerSocials = document.querySelector('.header-socials');
+          if (headerSocials) {
+            headerSocials.innerHTML = config.hero_socials.map(s => {
+              const svg = getSocialSvg(s.platform, false);
+              return `<a href="${s.url}" id="h-${s.platform}" target="_blank" rel="noopener noreferrer" aria-label="${s.label}">${svg}</a>`;
+            }).join('');
+          }
+
+          // Hero socials pill container
+          const heroSocialsPill = document.getElementById('hero-socials');
+          if (heroSocialsPill) {
+            heroSocialsPill.innerHTML = config.hero_socials.map(s => {
+              const svg = getSocialSvg(s.platform, true);
+              return `<a href="${s.url}" id="hero-${s.platform}" target="_blank" rel="noopener noreferrer" aria-label="${s.label}">${svg}</a>`;
+            }).join('');
+          }
+
+          // Contact links list
+          const contactLinks = document.querySelector('.contact-links');
+          if (contactLinks) {
+            contactLinks.innerHTML = config.hero_socials.map(s => {
+              const svg = getSocialSvg(s.platform, false);
+              const isMail = s.url.startsWith('mailto:');
+              return `<a href="${s.url}" class="contact-link-item" id="${s.platform}-contact" ${isMail ? '' : 'target="_blank" rel="noopener noreferrer"'}>${svg}${s.label}</a>`;
+            }).join('');
+          }
+        }
+
+        // Render Contact headings
+        if (config.connect_heading) {
+          const contactH2 = document.querySelector('.contact-inner h2');
+          if (contactH2) contactH2.innerText = config.connect_heading;
+        }
+        if (config.connect_subtext) {
+          const contactP = document.querySelector('.contact-inner p');
+          if (contactP) contactP.innerText = config.connect_subtext;
+        }
+
+        // Render Footer
+        const footerSpan1 = document.querySelector('footer span:first-child');
+        const footerSpan2 = document.querySelector('footer span:last-child');
+        if (config.footer_copyright && footerSpan1) {
+          footerSpan1.innerText = config.footer_copyright;
+        }
+        if (config.footer_location && footerSpan2) {
+          footerSpan2.innerText = config.footer_location;
+        }
+
+        // 2. Render About Paragraphs
+        if (config.about_bold_text) {
+          document.getElementById('about-bold-wrap').innerHTML = `<h2>${config.about_bold_text}</h2>`;
+        }
+        const aboutWrap = document.getElementById('about-paragraphs-wrap');
+        if (aboutWrap && aboutRes.data.length > 0) {
+          aboutWrap.innerHTML = aboutRes.data.map((p, idx) => {
+            const delayClass = idx <= 4 ? `reveal-delay-${idx}` : '';
+            return `<p class="reveal ${delayClass}">${p.text}</p>`;
+          }).join('');
+        }
+
+        // 3. Render Updates & Dynamic Timeline
+        if (config.updates_title) {
+          document.getElementById('updates-title').innerText = config.updates_title;
+        }
+        const timelineEntries = timelineRes.data;
+        const yearsSet = new Set(timelineEntries.map(e => parseInt(e.year)));
+        const sortedYears = Array.from(yearsSet).sort((a, b) => b - a);
+
+        if (sortedYears.length > 0) {
+          // Render year toggle tabs
+          const yearSelector = document.getElementById('year-selector');
+          const activeYear = sortedYears[0];
+          yearSelector.innerHTML = sortedYears.map(yr => {
+            return `<button class="year-btn ${yr === activeYear ? 'active' : ''}" data-year="${yr}">${yr}</button>`;
+          }).join('');
+
+          // Render updates wrappers grouped by year
+          const timelineContainer = document.getElementById('timeline-lists-container');
+          timelineContainer.innerHTML = sortedYears.map(yr => {
+            const yearEntries = timelineEntries.filter(e => parseInt(e.year) === yr);
+            const entriesHtml = yearEntries.map(e => {
+              const tagsHtml = (e.tags || []).map(t => `<span class="timeline-tag">${t}</span>`).join(' ');
+              return `
+                <div class="timeline-entry">
+                  <div class="timeline-month">${e.month}</div>
+                  <div class="timeline-content">
+                    <h4>${e.title}</h4>
+                    <p>${e.description}</p>
+                    ${tagsHtml}
+                  </div>
+                </div>
+              `;
+            }).join('');
+
+            return `
+              <div class="timeline-list ${yr === activeYear ? 'active' : ''}" data-year="${yr}">
+                ${entriesHtml}
+              </div>
+            `;
+          }).join('');
+
+          // Re-bind click event handlers for timeline tabs
+          document.querySelectorAll('.year-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+              document.querySelectorAll('.timeline-list').forEach(tl => {
+                tl.classList.toggle('active', tl.dataset.year === btn.dataset.year);
+              });
+            });
+          });
+        }
+
+        // 4. Render Ventures list
+        if (config.ventures_title) {
+          document.getElementById('ventures-title').innerText = config.ventures_title;
+        }
+        const cardsScroll = document.getElementById('cards-scroll');
+        if (cardsScroll && venturesRes.data.length > 0) {
+          const venturesHtml = venturesRes.data.map(v => {
+            const innerContent = `
+              <div class="card-img" style="${v.logo_url ? 'background:#000;padding:0;overflow:hidden' : getVenturePlaceholderStyle(v.name).bg}">
+                ${v.logo_url ? `<img src="${v.logo_url}" alt="${v.name} logo" style="width:100%;height:100%;object-fit:cover;display:block;"/>` : getVenturePlaceholderStyle(v.name).html}
+              </div>
+              <h3 class="card-title">${v.name}</h3>
+              <p class="card-meta">${v.website_url ? v.website_url.replace(/^https?:\/\/(www\.)?/, '') + ' · ' : ''}${v.year}</p>
+            `;
+            if (v.website_url) {
+              return `<a target="_blank" href="${v.website_url}" class="card">${innerContent}</a>`;
+            } else {
+              return `<div class="card">${innerContent}</div>`;
+            }
+          }).join('');
+
+          // Keep static footer card in ventures slider
+          const moreCard = `
+            <div class="card" style="border-style:dashed;display:flex;align-items:center;justify-content:center;background:transparent">
+              <div style="text-align:center">
+                <p style="font-size:2.2rem;color:var(--fg-muted);margin-bottom:10px">+</p>
+                <p style="font-family:'DM Serif Display',serif;font-size:0.95rem;color:var(--fg-muted)">More coming soon</p>
+              </div>
+            </div>
+          `;
+          cardsScroll.innerHTML = venturesHtml + moreCard;
+        }
+
+        // 5. Render Custom Sections
+        document.querySelectorAll('.custom-section-container').forEach(el => el.remove());
+        const visibleSections = customRes.data.filter(s => s.is_visible);
+        visibleSections.forEach(sec => {
+          const target = document.getElementById(sec.insert_after);
+          if (target) {
+            const secEl = document.createElement('section');
+            secEl.id = `custom-${sec.id}`;
+            secEl.className = 'custom-section-container';
+
+            let innerHtml = `<h2 class="section-title reveal">${sec.title}</h2>`;
+            const content = sec.content || {};
+
+            if (sec.layout_type === 'text') {
+              innerHtml += `<div style="max-width:800px;margin:0 auto;color:var(--fg-muted);line-height:1.8;font-size:1.05rem;">`;
+              if (Array.isArray(content.paragraphs)) {
+                content.paragraphs.forEach((p, idx) => {
+                  const delay = idx <= 4 ? `reveal-delay-${idx}` : '';
+                  innerHtml += `<p class="reveal ${delay}" style="margin-bottom:20px">${p}</p>`;
+                });
+              } else if (content.text) {
+                innerHtml += `<div class="reveal">${content.text}</div>`;
+              }
+              innerHtml += `</div>`;
+            } else if (sec.layout_type === 'card_grid') {
+              innerHtml += `<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:24px;max-width:1160px;margin:0 auto;">`;
+              if (Array.isArray(content.cards)) {
+                content.cards.forEach(c => {
+                  innerHtml += `
+                  <div class="card reveal" style="width:100%;height:auto;min-height:220px;justify-content:flex-start;">
+                    ${c.image_url ? `<div class="card-img" style="background:#000;padding:0;overflow:hidden;height:140px;margin-bottom:16px;"><img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;"/></div>` : ''}
+                    <h3 class="card-title" style="text-align:left;margin-bottom:10px;font-size:1.2rem;">${c.title}</h3>
+                    <p style="font-size:0.9rem;color:var(--fg-muted);line-height:1.6;margin-bottom:12px;">${c.description}</p>
+                    ${c.link_url ? `<a href="${c.link_url}" target="_blank" style="font-size:0.85rem;color:var(--primary);font-weight:600;margin-top:auto;">${c.link_text || 'Learn more ↗'}</a>` : ''}
+                  </div>`;
+                });
+              }
+              innerHtml += `</div>`;
+            } else if (sec.layout_type === 'image_gallery') {
+              innerHtml += `<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;max-width:1160px;margin:0 auto;">`;
+              if (Array.isArray(content.images)) {
+                content.images.forEach(img => {
+                  innerHtml += `
+                  <div class="reveal" style="border-radius:12px;overflow:hidden;border:1px solid var(--border);position:relative;aspect-ratio:4/3;">
+                    <img src="${img.url}" alt="${img.caption || ''}" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"/>
+                    ${img.caption ? `<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent, rgba(0,0,0,0.8));padding:12px;color:#fff;font-size:0.85rem;">${img.caption}</div>` : ''}
+                  </div>`;
+                });
+              }
+              innerHtml += `</div>`;
+            } else if (sec.layout_type === 'video_embed') {
+              innerHtml += `<div style="max-width:800px;margin:0 auto;aspect-ratio:16/9;border-radius:14px;overflow:hidden;border:1px solid var(--border);" class="reveal">`;
+              if (content.embed_url) {
+                let embedSrc = content.embed_url;
+                if (embedSrc.includes('youtube.com/watch?v=')) {
+                  embedSrc = embedSrc.replace('watch?v=', 'embed/');
+                } else if (embedSrc.includes('youtu.be/')) {
+                  embedSrc = embedSrc.replace('youtu.be/', 'youtube.com/embed/');
+                }
+                innerHtml += `<iframe src="${embedSrc}" style="width:100%;height:100%;border:none;" allowfullscreen></iframe>`;
+              }
+              innerHtml += `</div>`;
+            } else if (sec.layout_type === 'mixed') {
+              innerHtml += `<div style="max-width:940px;margin:0 auto;" class="reveal">`;
+              if (content.html) {
+                innerHtml += content.html;
+              }
+              innerHtml += `</div>`;
+            }
+
+            secEl.innerHTML = innerHtml;
+            target.insertAdjacentElement('afterend', secEl);
+          }
+        });
+
+        // Initialize scroll reveal on newly loaded items
+        initScrollReveal();
+
+        dataLoaded = true;
+      } catch (err) {
+        console.error('Error loading portfolio data:', err);
+        dataLoaded = true; // Complete loader anyway to not lock user
+      }
+    }
+
+    // Subscribe to realtime updates for instant reflection
+    function setupRealtime() {
+      supabaseClient
+        .channel('portfolio_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'portfolio_config' }, () => { loadPortfolioData(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'about_paragraphs' }, () => { loadPortfolioData(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'timeline_entries' }, () => { loadPortfolioData(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'ventures' }, () => { loadPortfolioData(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'custom_sections' }, () => { loadPortfolioData(); })
+        .subscribe();
+    }
+
+    /* ---- LOADER ANIMATION CONTROL ---- */
+    (function () {
+      const loaderEl = document.getElementById('loader');
+      const countEl  = document.getElementById('loader-count');
+      let count = 0;
+      const tick = setInterval(() => {
+        if (count < 99) {
+          count += Math.ceil(Math.random() * 3 + 1);
+          if (count > 99) count = 99;
+          countEl.innerHTML = count + '<span class="loader-pct">%</span>';
+        } else if (count === 99 && dataLoaded) {
+          count = 100;
+          clearInterval(tick);
+          countEl.innerHTML = '100<span class="loader-pct">%</span>';
+          setTimeout(() => {
+            loaderEl.classList.add('hide');
+            document.body.classList.add('loaded');
+          }, 280);
+        }
+      }, 17);
+    })();
+
+    /* ---- DARK / LIGHT TOGGLE ---- */
+    const html     = document.documentElement;
+    const moonIcon = document.getElementById('moon-icon');
+    const sunIcon  = document.getElementById('sun-icon');
+
+    function setLight(on) {
+      if (on) {
+        html.classList.add('light');
+        moonIcon.style.display = 'none';
+        sunIcon.style.display  = 'block';
+      } else {
+        html.classList.remove('light');
+        moonIcon.style.display = 'block';
+        sunIcon.style.display  = 'none';
+      }
+      localStorage.setItem('theme', on ? 'light' : 'dark');
+    }
+
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      setLight(!html.classList.contains('light'));
+    });
+
+    if (localStorage.getItem('theme') === 'light') setLight(true);
+
+    /* ---- HAMBURGER MENU ---- */
+    const hamburger  = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuClose  = document.getElementById('menu-close');
+    hamburger.addEventListener('click', () => { mobileMenu.classList.add('open'); document.body.style.overflow = 'hidden'; });
+    menuClose.addEventListener('click', close);
+    document.querySelectorAll('.mobile-nav-link').forEach(a => a.addEventListener('click', close));
+    function close() { mobileMenu.classList.remove('open'); document.body.style.overflow = ''; }
+
+    /* ---- DRAGGABLE CARD SCROLL ---- */
+    const scroller = document.getElementById('cards-scroll');
+    let isDown = false, startX = 0, scrollL = 0;
+    scroller.addEventListener('mousedown',  e => { isDown = true; scroller.classList.add('dragging'); startX = e.pageX - scroller.offsetLeft; scrollL = scroller.scrollLeft; });
+    scroller.addEventListener('mouseleave', () => { isDown = false; scroller.classList.remove('dragging'); });
+    scroller.addEventListener('mouseup',    () => { isDown = false; scroller.classList.remove('dragging'); });
+    scroller.addEventListener('mousemove',  e => { if (!isDown) return; e.preventDefault(); scroller.scrollLeft = scrollL - (e.pageX - scroller.offsetLeft - startX) * 1.5; });
+    let tX = 0, tSL = 0;
+    scroller.addEventListener('touchstart', e => { tX = e.touches[0].clientX; tSL = scroller.scrollLeft; }, { passive: true });
+    scroller.addEventListener('touchmove',  e => { scroller.scrollLeft = tSL + (tX - e.touches[0].clientX); }, { passive: true });
+
+    /* ---- SCROLL REVEAL ---- */
+    let obs = null;
+    function initScrollReveal() {
+      if (obs) {
+        obs.disconnect();
+      }
+      obs = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+      }, { threshold: 0.08 });
+
+      document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+      document.querySelectorAll('.section-title, .timeline-entry, .card, .contact-inner, .year-selector-wrap, footer').forEach((el, i) => {
+        if (!el.classList.contains('reveal')) {
+          el.classList.add('reveal');
+          if (i % 3 === 1) el.classList.add('reveal-delay-1');
+          if (i % 3 === 2) el.classList.add('reveal-delay-2');
+        }
+        obs.observe(el);
+      });
+    }
+
+    // Initialize fetching data and setting up channels immediately
+    loadPortfolioData();
+    setupRealtime();
+
+    // Scroll listener to toggle header background opacity and blur
+    const headerEl = document.querySelector('header');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) {
+        headerEl.classList.add('scrolled');
+      } else {
+        headerEl.classList.remove('scrolled');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Faisal Ahmed Shariff</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* ====================================================================
+       THEME & VARIABLES (Dark Mode Glassmorphic Aesthetic)
+    ==================================================================== */
+    :root {
+      --bg: #080c10;
+      --fg: #f0f4f8;
+      --fg-muted: rgba(240, 244, 248, 0.6);
+      --border: rgba(240, 244, 248, 0.08);
+      --card-bg: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.06);
+      --primary: #4af0c4;
+      --primary-hover: #3bdcbd;
+      --danger: #ff5e7e;
+      --danger-hover: #e04f6c;
+      --success: #3be095;
+      --input-bg: rgba(255, 255, 255, 0.02);
+      --input-border: rgba(255, 255, 255, 0.08);
+      --input-focus: rgba(74, 240, 196, 0.25);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Grain effect to match main page */
+    .grain {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.02;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    input, textarea, select {
+      font-family: inherit;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      color: var(--fg);
+      padding: 12px 16px;
+      border-radius: 8px;
+      outline: none;
+      transition: all 0.25s ease;
+      width: 100%;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--input-focus);
+      background: rgba(255,255,255,0.04);
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      outline: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #080c10;
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+    .btn-danger:hover {
+      background: var(--danger-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: var(--fg);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-1px);
+    }
+
+    /* ====================================================================
+       LOGIN SCREEN
+    ==================================================================== */
+    #login-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 10;
+    }
+
+    .login-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+      animation: cardFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes cardFadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .login-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+    .login-logo span {
+      color: var(--primary);
+    }
+
+    .login-subtitle {
+      font-size: 0.9rem;
+      color: var(--fg-muted);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--fg-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-msg {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      display: none;
+      line-height: 1.4;
+    }
+    .status-msg.error {
+      background: rgba(255, 94, 126, 0.12);
+      border: 1px solid rgba(255, 94, 126, 0.2);
+      color: var(--danger);
+      display: block;
+    }
+    .status-msg.success {
+      background: rgba(59, 224, 149, 0.12);
+      border: 1px solid rgba(59, 224, 149, 0.2);
+      color: var(--success);
+      display: block;
+    }
+
+    /* ====================================================================
+       MAIN DASHBOARD
+    ==================================================================== */
+    #dashboard-container {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      z-index: 10;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 40px;
+      background: rgba(8, 12, 16, 0.8);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .header-logo span {
+      color: var(--primary);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .user-info {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+    }
+
+    .btn-logout {
+      padding: 8px 16px;
+      font-size: 0.85rem;
+    }
+
+    .dashboard-layout {
+      display: flex;
+      flex: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 40px;
+      gap: 40px;
+    }
+
+    /* Tabs list */
+    .sidebar-tabs {
+      width: 260px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      text-align: left;
+      padding: 14px 20px;
+      width: 100%;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--fg-muted);
+      border: 1px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.95rem;
+    }
+    .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--fg);
+    }
+    .tab-btn.active {
+      background: var(--card-bg);
+      border-color: var(--card-border);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* Content area */
+    .dashboard-content {
+      flex: 1;
+      min-width: 0; /* Prevents overflow */
+    }
+
+    .tab-content {
+      display: none;
+      animation: tabFadeIn 0.4s ease;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes tabFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 32px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .card-title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+    }
+
+    .card-title-bar h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--fg);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .span-full {
+      grid-column: span 2;
+    }
+
+    /* CRUD List View Styles */
+    .crud-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .crud-item {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: border-color 0.2s ease;
+    }
+    .crud-item:hover {
+      border-color: rgba(240, 244, 248, 0.15);
+    }
+
+    .crud-info {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      padding-right: 20px;
+    }
+
+    .crud-heading {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    .crud-meta-row {
+      display: flex;
+      gap: 12px;
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+    }
+
+    .crud-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      padding: 8px 12px;
+      font-size: 0.8rem;
+    }
+
+    /* Image Upload Fields styling */
+    .file-upload-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--input-bg);
+      border: 1px dashed var(--input-border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .file-upload-preview {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      object-fit: cover;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: var(--fg-muted);
+    }
+
+    /* Modal / Form Overlay */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(8, 12, 16, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-card {
+      background: #0d1217;
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.8);
+      animation: modalScaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    @keyframes modalScaleUp {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Tag pills custom input styling */
+    .tag-input-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      padding: 8px 12px;
+      border-radius: 8px;
+      min-height: 48px;
+      align-items: center;
+    }
+    .tag-pill {
+      background: var(--primary-focus);
+      border: 1px solid rgba(74, 240, 196, 0.3);
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tag-pill button {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--primary);
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+    .tag-input-field {
+      border: none;
+      background: transparent;
+      padding: 4px;
+      width: auto;
+      flex: 1;
+      min-width: 100px;
+    }
+    .tag-input-field:focus {
+      box-shadow: none;
+      border: none;
+    }
+
+    /* List reorder styles */
+    .reorder-list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 8px;
+    }
+    .reorder-handle {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .reorder-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      color: var(--fg-muted);
+    }
+    .reorder-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--fg);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+      .dashboard-layout {
+        flex-direction: column;
+        padding: 24px;
+        gap: 24px;
+      }
+      .sidebar-tabs {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 8px;
+      }
+      .tab-btn {
+        white-space: nowrap;
+        padding: 10px 16px;
+      }
+      header {
+        padding: 16px 24px;
+      }
+    }
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .span-full {
+        grid-column: span 1;
+      }
+      .modal-card {
+        padding: 20px;
+      }
+      .crud-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+      .crud-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="grain"></div>
+
+  <!-- ====================================================================
+       LOGIN SCREEN
+  ==================================================================== -->
+  <div id="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <h1 class="login-logo">faisal.<span>admin</span></h1>
+        <p class="login-subtitle">Sign in to manage your portfolio</p>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email Address</label>
+          <input type="email" id="login-email" required placeholder="name@example.com">
+        </div>
+        <div class="form-group" style="margin-bottom: 28px;">
+          <label class="form-label" for="login-password">Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%;">
+          Sign In
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+      </form>
+
+      <div id="login-status" class="status-msg"></div>
+      
+      <div style="margin-top: 24px; text-align: center; font-size: 0.8rem; color: var(--fg-muted)">
+        Need help? Check your Supabase console auth configuration.
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MAIN DASHBOARD
+  ==================================================================== -->
+  <div id="dashboard-container">
+    <header>
+      <div class="header-logo">faisal.<span>dashboard</span></div>
+      <div class="header-actions">
+        <span class="user-info" id="user-email-display">admin@faisal.com</span>
+        <button class="btn-secondary btn-logout" id="logout-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          Sign Out
+        </button>
+      </div>
+    </header>
+
+    <div class="dashboard-layout">
+      <!-- Sidebar Navigation Tabs -->
+      <div class="sidebar-tabs">
+        <button class="tab-btn active" data-tab="tab-global">
+          🌎 Global & Hero
+        </button>
+        <button class="tab-btn" data-tab="tab-about">
+          💡 About Bio
+        </button>
+        <button class="tab-btn" data-tab="tab-updates">
+          📅 Updates Timeline
+        </button>
+        <button class="tab-btn" data-tab="tab-ventures">
+          🚀 Ventures
+        </button>
+        <button class="tab-btn" data-tab="tab-custom">
+          🧩 Custom Sections
+        </button>
+      </div>
+
+      <!-- Main Contents Area -->
+      <div class="dashboard-content">
+
+        <!-- 1. GLOBAL & HERO PANEL -->
+        <div class="tab-content active" id="tab-global">
+          <div class="section-card">
+            <div class="card-title-bar">
+              <h2>Hero Branding</h2>
+            </div>
+            <form id="form-hero-config">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Solid Name Part</label>
+                  <input type="text" id="cfg-hero-name-solid" placeholder="Faisal">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Outline Name Part</label>
+                  <input type="text" id="cfg-hero-name-outline" placeholder="Ahmed Shariff">
+                </div>
+                <div class="form-group span-full">
+                  <label class="form-label">Hero Greeting / Intro text (HTML allowed)</label>
+                  <textarea id="cfg-hero-greeting" rows="3" placeholder="I've gotten your attention..."></textarea>
+                </div>
+                <div class="form-group span-full">
+                  <label class="form-label">Profile Image Upload</label>
+                  <div class="file-upload-wrap">
+                    <img class="file-upload-preview" id="img-hero-preview" src="" alt="Profile">
+                    <div style="flex: 1;">
+                      <input type="file" id="file-hero-photo" accept="image/*" style="margin-bottom: 8px; border: none; padding: 0;">
+                      <p style="font-size: 0.75rem; color: var(--fg-muted)">Upload a clean square image. Replaces current assets/My picture.jpeg.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top: 24px; text-align: right;">
+                <button type="submit" class="btn-primary">Save Hero Section</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="section-card">
+            <div class="card-title-bar">
+              <h2>Social Media Links</h2>
+            </div>
+            <form id="form-socials-config">
+              <div class="form-grid" id="social-links-grid">
+                <!-- Linked dynamically -->
+              </div>
+              <div style="margin-top: 24px; text-align: right;">
+                <button type="submit" class="btn-primary">Save Social Links</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="section-card">
+            <div class="card-title-bar">
+              <h2>Section Headings & Footer</h2>
+            </div>
+            <form id="form-global-config">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Updates Timeline Title</label>
+                  <input type="text" id="cfg-updates-title" placeholder="Updates">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Ventures Slider Title</label>
+                  <input type="text" id="cfg-ventures-title" placeholder="Ventures">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Contact Heading</label>
+                  <input type="text" id="cfg-connect-heading" placeholder="Let's work together">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Contact Subtext</label>
+                  <input type="text" id="cfg-connect-subtext" placeholder="Got a bold idea or just want to talk?">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Footer Copyright</label>
+                  <input type="text" id="cfg-footer-copyright" placeholder="© 2026 Faisal Ahmed Shariff">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Footer Location</label>
+                  <input type="text" id="cfg-footer-location" placeholder="Bengaluru, India">
+                </div>
+              </div>
+              <div style="margin-top: 24px; text-align: right;">
+                <button type="submit" class="btn-primary">Save Configs</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- 2. ABOUT BIO PANEL -->
+        <div class="tab-content" id="tab-about">
+          <div class="section-card">
+            <div class="card-title-bar">
+              <h2>Left Side Text</h2>
+            </div>
+            <form id="form-about-bold-config">
+              <div class="form-group">
+                <label class="form-label">Bold Tagline Words (Separated by &lt;br/&gt;)</label>
+                <input type="text" id="cfg-about-bold-text" placeholder="Builder.<br/>Founder.<br/>Entrepreneur.">
+              </div>
+              <div style="margin-top: 16px; text-align: right;">
+                <button type="submit" class="btn-primary">Save Tagline</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="section-card">
+            <div class="card-title-bar">
+              <h2>Right Side Bio Paragraphs</h2>
+              <button class="btn-secondary" id="btn-add-paragraph" style="padding: 8px 16px; font-size: 0.85rem;">
+                + Add Paragraph
+              </button>
+            </div>
+            <div style="margin-bottom: 16px; font-size: 0.85rem; color: var(--fg-muted)">
+              Drag or use arrows to sort paragraph sequence. HTML tag like &lt;strong&gt; and &lt;br/&gt; are allowed.
+            </div>
+            
+            <div id="about-paragraphs-list">
+              <!-- Rendered dynamically -->
+            </div>
+            
+            <div style="margin-top: 24px; text-align: right;">
+              <button class="btn-primary" id="btn-save-paragraphs">Save Paragraph Sequence & Text</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. UPDATES TIMELINE PANEL -->
+        <div class="tab-content" id="tab-updates">
+          <div class="section-card">
+            <div class="card-title-bar">
+              <h2>Timeline Entries</h2>
+              <button class="btn-primary" id="btn-new-timeline" style="padding: 8px 16px; font-size: 0.85rem;">
+                + Add New Entry
+              </button>
+            </div>
+            
+            <div class="crud-list" id="timeline-crud-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. VENTURES PANEL -->
+        <div class="tab-content" id="tab-ventures">
+          <div class="section-card">
+            <div class="card-title-bar">
+              <h2>Venture Cards</h2>
+              <button class="btn-primary" id="btn-new-venture" style="padding: 8px 16px; font-size: 0.85rem;">
+                + Add New Venture
+              </button>
+            </div>
+            
+            <div class="crud-list" id="ventures-crud-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. CUSTOM SECTIONS PANEL -->
+        <div class="tab-content" id="tab-custom">
+          <div class="section-card">
+            <div class="card-title-bar">
+              <h2>Custom Sections</h2>
+              <button class="btn-primary" id="btn-new-custom" style="padding: 8px 16px; font-size: 0.85rem;">
+                + Add Custom Section
+              </button>
+            </div>
+            <div style="margin-bottom: 20px; font-size: 0.85rem; color: var(--fg-muted)">
+              Create custom sections to insert between your main sections. Supports card grids, text blocks, image blocks, video embeds, and raw HTML.
+            </div>
+            
+            <div class="crud-list" id="custom-crud-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODALS OVERLAYS (CRUD Forms)
+  ==================================================================== -->
+  
+  <!-- A. Timeline Entry Modal -->
+  <div class="modal-overlay" id="modal-timeline">
+    <div class="modal-card">
+      <div class="card-title-bar">
+        <h3 id="modal-timeline-title">Add Timeline Entry</h3>
+        <button class="btn-secondary" onclick="closeModal('modal-timeline')" style="padding: 6px 12px; font-size: 0.8rem;">×</button>
+      </div>
+      <form id="form-timeline">
+        <input type="hidden" id="timeline-id">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Month Abbreviation / Period</label>
+            <input type="text" id="timeline-month" required placeholder="e.g. Jul, Nov, Mid">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Year (4-digit Number)</label>
+            <input type="number" id="timeline-year" required placeholder="e.g. 2025">
+          </div>
+          <div class="form-group span-full">
+            <label class="form-label">Entry Title / Milestone</label>
+            <input type="text" id="timeline-entry-title" required placeholder="Began mastering sales fundamentals">
+          </div>
+          <div class="form-group span-full">
+            <label class="form-label">Description (HTML allowed)</label>
+            <textarea id="timeline-description" rows="3" required placeholder="Describe what you built or accomplished."></textarea>
+          </div>
+          <div class="form-group span-full">
+            <label class="form-label">Tags (Type and press Enter or Comma)</label>
+            <div class="tag-input-container" id="timeline-tags-container">
+              <!-- pills -->
+              <input type="text" class="tag-input-field" id="timeline-tag-input" placeholder="Add tag...">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sort Order (Higher value = shows later)</label>
+            <input type="number" id="timeline-sort-order" default="0" placeholder="0">
+          </div>
+        </div>
+        <div style="margin-top: 28px; display: flex; justify-content: flex-end; gap: 12px;">
+          <button type="button" class="btn-secondary" onclick="closeModal('modal-timeline')">Cancel</button>
+          <button type="submit" class="btn-primary">Save Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- B. Venture Modal -->
+  <div class="modal-overlay" id="modal-venture">
+    <div class="modal-card">
+      <div class="card-title-bar">
+        <h3 id="modal-venture-title">Add Venture</h3>
+        <button class="btn-secondary" onclick="closeModal('modal-venture')" style="padding: 6px 12px; font-size: 0.8rem;">×</button>
+      </div>
+      <form id="form-venture">
+        <input type="hidden" id="venture-id">
+        <div class="form-grid">
+          <div class="form-group span-full">
+            <label class="form-label">Venture Name</label>
+            <input type="text" id="venture-name" required placeholder="ZIVO — AI CRM">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Active Year / Range Text</label>
+            <input type="text" id="venture-year" required placeholder="e.g. 2026 or 2024–2025">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Website URL (Optional)</label>
+            <input type="url" id="venture-website" placeholder="https://example.com">
+          </div>
+          <div class="form-group span-full">
+            <label class="form-label">Venture Logo (Optional)</label>
+            <div class="file-upload-wrap">
+              <img class="file-upload-preview" id="img-venture-preview" src="" alt="Logo">
+              <div style="flex: 1;">
+                <input type="file" id="file-venture-logo" accept="image/*" style="margin-bottom: 8px; border: none; padding: 0;">
+                <p style="font-size: 0.75rem; color: var(--fg-muted)">Upload a file to host online, or leave empty to use a procedural CSS gradient.</p>
+              </div>
+            </div>
+          </div>
+          <div class="form-group span-full">
+            <label class="form-label">Description Card Text</label>
+            <textarea id="venture-description" rows="3" required placeholder="Short brief of this product or agency."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sort Order</label>
+            <input type="number" id="venture-sort-order" placeholder="0">
+          </div>
+        </div>
+        <div style="margin-top: 28px; display: flex; justify-content: flex-end; gap: 12px;">
+          <button type="button" class="btn-secondary" onclick="closeModal('modal-venture')">Cancel</button>
+          <button type="submit" class="btn-primary">Save Venture</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- C. Custom Section Modal -->
+  <div class="modal-overlay" id="modal-custom">
+    <div class="modal-card" style="max-width: 780px;">
+      <div class="card-title-bar">
+        <h3 id="modal-custom-title">Add Custom Section</h3>
+        <button class="btn-secondary" onclick="closeModal('modal-custom')" style="padding: 6px 12px; font-size: 0.8rem;">×</button>
+      </div>
+      <form id="form-custom">
+        <input type="hidden" id="custom-id">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Section Title</label>
+            <input type="text" id="custom-title" required placeholder="e.g. My Frameworks">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Insert After Section</label>
+            <select id="custom-insert-after" required>
+              <option value="hero">Hero Section</option>
+              <option value="about-section">About Section</option>
+              <option value="updates-section">Updates Section</option>
+              <option value="ventures-section">Ventures Section</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Layout Type</label>
+            <select id="custom-layout-type" required onchange="toggleCustomLayoutForm()">
+              <option value="text">Rich Text / Paragraphs</option>
+              <option value="card_grid">Features / Cards Grid</option>
+              <option value="image_gallery">Image Gallery</option>
+              <option value="video_embed">Video Embed (YouTube/Vimeo)</option>
+              <option value="mixed">Mixed Custom HTML</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sort Order</label>
+            <input type="number" id="custom-sort-order" placeholder="0">
+          </div>
+          <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 24px;">
+            <input type="checkbox" id="custom-is-visible" checked style="width: auto;">
+            <label class="form-label" for="custom-is-visible" style="margin-bottom: 0;">Visible on Site</label>
+          </div>
+
+          <!-- Dynamic Layout Fields Containers -->
+          <div class="form-group span-full" style="border-top: 1px solid var(--border); padding-top: 20px; margin-top: 10px;">
+            <h4 style="margin-bottom: 16px; font-size: 1rem; color: var(--primary);">Section Content Options</h4>
+            
+            <!-- Text layout options -->
+            <div id="layout-opt-text" class="layout-subform">
+              <div class="form-group">
+                <label class="form-label">Paragraphs (Separate each paragraph with a blank newline)</label>
+                <textarea id="custom-text-paragraphs" rows="6" placeholder="Enter paragraph 1...&#10;&#10;Enter paragraph 2..."></textarea>
+              </div>
+            </div>
+
+            <!-- Card grid options -->
+            <div id="layout-opt-card_grid" class="layout-subform" style="display: none;">
+              <div id="custom-cards-list" style="margin-bottom: 16px;">
+                <!-- dynamic cards inputs -->
+              </div>
+              <button type="button" class="btn-secondary" onclick="addCardToCustomForm()" style="width: 100%; padding: 8px;">+ Add Card</button>
+            </div>
+
+            <!-- Image gallery options -->
+            <div id="layout-opt-image_gallery" class="layout-subform" style="display: none;">
+              <div id="custom-images-list" style="margin-bottom: 16px;">
+                <!-- dynamic images inputs -->
+              </div>
+              <button type="button" class="btn-secondary" onclick="addImageToCustomForm()" style="width: 100%; padding: 8px;">+ Add Image link</button>
+            </div>
+
+            <!-- Video embed options -->
+            <div id="layout-opt-video_embed" class="layout-subform" style="display: none;">
+              <div class="form-group">
+                <label class="form-label">Video Page or Embed URL (YouTube/Vimeo)</label>
+                <input type="url" id="custom-video-url" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+              </div>
+            </div>
+
+            <!-- Mixed HTML options -->
+            <div id="layout-opt-mixed" class="layout-subform" style="display: none;">
+              <div class="form-group">
+                <label class="form-label">Raw Custom HTML (Uses landing page CSS classes)</label>
+                <textarea id="custom-mixed-html" rows="8" placeholder="<div class='about-grid'>...</div>"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 28px; display: flex; justify-content: flex-end; gap: 12px;">
+          <button type="button" class="btn-secondary" onclick="closeModal('modal-custom')">Cancel</button>
+          <button type="submit" class="btn-primary">Save Custom Section</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Global status alert banner -->
+  <div id="global-status-toast" style="position: fixed; bottom: 24px; right: 24px; background: rgba(8, 12, 16, 0.95); border: 1px solid var(--primary); padding: 16px 24px; border-radius: 8px; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: none; align-items: center; gap: 12px; font-weight: 500;">
+    <span style="color: var(--primary)">●</span>
+    <span id="toast-message">Configuration saved successfully!</span>
+  </div>
+
+  <!-- ====================================================================
+       ADMIN JAVASCRIPT LOGIC
+  ==================================================================== -->
+  <script>
+    const supabaseUrl = 'https://nesfzytfgswcvgsrruxo.supabase.co';
+    const supabaseKey = 'sb_publishable_zOQxpja5sMsQIXs6MgsMyA_6mNZ-Ffo';
+    const { createClient } = supabase;
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+    // Page state variables
+    let sessionUser = null;
+    let portfolioConfig = {};
+    let aboutParagraphs = [];
+    let currentTags = [];
+    
+    // Auth Listener on boot
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        sessionUser = session.user;
+        document.getElementById('user-email-display').innerText = sessionUser.email;
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('dashboard-container').style.display = 'flex';
+        // Toast
+        showToast("Signed in successfully as " + sessionUser.email);
+        loadAllDashboardData();
+      } else {
+        sessionUser = null;
+        document.getElementById('login-container').style.display = 'flex';
+        document.getElementById('dashboard-container').style.display = 'none';
+      }
+    });
+
+    // 1. AUTHENTICATION LOGIC
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const status = document.getElementById('login-status');
+      
+      status.className = 'status-msg';
+      status.style.display = 'none';
+
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      } catch (err) {
+        status.innerText = err.message || 'Invalid login details.';
+        status.className = 'status-msg error';
+      }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await supabaseClient.auth.signOut();
+    });
+
+    // 2. DASHBOARD TABS TOGGLER
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // 3. RETRIEVE ALL DATABASE CONTENT ON SIGN IN
+    async function loadAllDashboardData() {
+      try {
+        const [
+          configRes,
+          aboutRes,
+          timelineRes,
+          venturesRes,
+          customRes
+        ] = await Promise.all([
+          supabaseClient.from('portfolio_config').select('*'),
+          supabaseClient.from('about_paragraphs').select('*').order('sort_order', { ascending: true }),
+          supabaseClient.from('timeline_entries').select('*').order('sort_order', { ascending: true }),
+          supabaseClient.from('ventures').select('*').order('sort_order', { ascending: true }),
+          supabaseClient.from('custom_sections').select('*').order('sort_order', { ascending: true })
+        ]);
+
+        if (configRes.error) throw configRes.error;
+        if (aboutRes.error) throw aboutRes.error;
+        if (timelineRes.error) throw timelineRes.error;
+        if (venturesRes.error) throw venturesRes.error;
+        if (customRes.error) throw customRes.error;
+
+        // Map config table
+        portfolioConfig = {};
+        configRes.data.forEach(item => {
+          portfolioConfig[item.key] = item.value;
+        });
+
+        aboutParagraphs = aboutRes.data;
+
+        // Populate Forms
+        populateGlobalForm();
+        populateAboutParagraphs();
+        populateTimelineList(timelineRes.data);
+        populateVenturesList(venturesRes.data);
+        populateCustomList(customRes.data);
+
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        showToast('Error loading data: ' + err.message, true);
+      }
+    }
+
+    // 4. TOAST NOTIFICATION
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('global-status-toast');
+      const text = document.getElementById('toast-message');
+      text.innerText = message;
+      toast.style.borderColor = isError ? 'var(--danger)' : 'var(--primary)';
+      toast.querySelector('span:first-child').style.color = isError ? 'var(--danger)' : 'var(--primary)';
+      toast.style.display = 'flex';
+      
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3500);
+    }
+
+    // Modal management helper
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    // ====================================================================
+    // PANEL A: GLOBAL & HERO CONFIGS
+    // ====================================================================
+    function populateGlobalForm() {
+      // Hero
+      document.getElementById('cfg-hero-name-solid').value = portfolioConfig.hero_name_solid || '';
+      document.getElementById('cfg-hero-name-outline').value = portfolioConfig.hero_name_outline || '';
+      document.getElementById('cfg-hero-greeting').value = portfolioConfig.hero_greeting || '';
+      document.getElementById('img-hero-preview').src = portfolioConfig.hero_photo_url || '';
+      
+      // Global
+      document.getElementById('cfg-updates-title').value = portfolioConfig.updates_title || '';
+      document.getElementById('cfg-ventures-title').value = portfolioConfig.ventures_title || '';
+      document.getElementById('cfg-connect-heading').value = portfolioConfig.connect_heading || '';
+      document.getElementById('cfg-connect-subtext').value = portfolioConfig.connect_subtext || '';
+      document.getElementById('cfg-footer-copyright').value = portfolioConfig.footer_copyright || '';
+      document.getElementById('cfg-footer-location').value = portfolioConfig.footer_location || '';
+      document.getElementById('cfg-about-bold-text').value = portfolioConfig.about_bold_text || '';
+
+      // Socials list renderer
+      const socialsList = portfolioConfig.hero_socials || [
+        { platform: 'linkedin', url: '', label: 'LinkedIn' },
+        { platform: 'instagram', url: '', label: 'Instagram' },
+        { platform: 'github', url: '', label: 'GitHub' },
+        { platform: 'email', url: '', label: 'Email' }
+      ];
+      
+      const grid = document.getElementById('social-links-grid');
+      grid.innerHTML = socialsList.map((s, idx) => {
+        return `
+          <div class="form-group span-full" style="display:grid; grid-template-columns: 140px 1fr 120px; gap:16px; align-items:center;">
+            <div>
+              <span style="font-weight:600; text-transform:capitalize">${s.platform}</span>
+            </div>
+            <input type="text" class="social-url-input" data-platform="${s.platform}" data-label="${s.label}" value="${s.url}" placeholder="${s.platform === 'email' ? 'mailto:yours@email.com' : 'https://...' }">
+            <span style="font-size:0.8rem; color:var(--fg-muted)">${s.label}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Handle Asset Upload to Storage Buckets
+    async function uploadAsset(file, path) {
+      try {
+        // Path matches portfolio-assets/avatars/file-name.jpg or portfolio-assets/logos/file-name.jpg
+        const { data, error } = await supabaseClient.storage
+          .from('portfolio-assets')
+          .upload(path, file, { cacheControl: '3600', upsert: true });
+
+        if (error) throw error;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabaseClient.storage
+          .from('portfolio-assets')
+          .getPublicUrl(path);
+
+        return publicUrl;
+      } catch (err) {
+        console.error('File upload failed:', err);
+        throw err;
+      }
+    }
+
+    // Save Hero Branding Form
+    document.getElementById('form-hero-config').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const solid = document.getElementById('cfg-hero-name-solid').value;
+      const outline = document.getElementById('cfg-hero-name-outline').value;
+      const greeting = document.getElementById('cfg-hero-greeting').value;
+      const fileInput = document.getElementById('file-hero-photo');
+
+      try {
+        let photoUrl = portfolioConfig.hero_photo_url;
+        
+        // If image uploaded
+        if (fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          const path = `avatars/avatar_${Date.now()}.${file.name.split('.').pop()}`;
+          showToast('Uploading profile image...');
+          photoUrl = await uploadAsset(file, path);
+          document.getElementById('img-hero-preview').src = photoUrl;
+        }
+
+        const updates = [
+          { key: 'hero_name_solid', value: solid },
+          { key: 'hero_name_outline', value: outline },
+          { key: 'hero_greeting', value: greeting },
+          { key: 'hero_photo_url', value: photoUrl }
+        ];
+
+        // Save each configurations row
+        for (const item of updates) {
+          const { error } = await supabaseClient
+            .from('portfolio_config')
+            .upsert({ key: item.key, value: item.value });
+          if (error) throw error;
+        }
+
+        showToast('Hero Branding saved successfully!');
+        loadAllDashboardData();
+      } catch (err) {
+        showToast('Error saving hero: ' + err.message, true);
+      }
+    });
+
+    // Save Socials Form
+    document.getElementById('form-socials-config').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const socialsList = [];
+      document.querySelectorAll('.social-url-input').forEach(input => {
+        socialsList.push({
+          platform: input.dataset.platform,
+          url: input.value,
+          label: input.dataset.label
+        });
+      });
+
+      try {
+        const { error } = await supabaseClient
+          .from('portfolio_config')
+          .upsert({ key: 'hero_socials', value: socialsList });
+
+        if (error) throw error;
+        showToast('Social platforms updated!');
+        loadAllDashboardData();
+      } catch (err) {
+        showToast('Error saving socials: ' + err.message, true);
+      }
+    });
+
+    // Save Section Titles & Footers
+    document.getElementById('form-global-config').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const uTitle = document.getElementById('cfg-updates-title').value;
+      const vTitle = document.getElementById('cfg-ventures-title').value;
+      const cH2 = document.getElementById('cfg-connect-heading').value;
+      const cP = document.getElementById('cfg-connect-subtext').value;
+      const fCopy = document.getElementById('cfg-footer-copyright').value;
+      const fLoc = document.getElementById('cfg-footer-location').value;
+
+      try {
+        const updates = [
+          { key: 'updates_title', value: uTitle },
+          { key: 'ventures_title', value: vTitle },
+          { key: 'connect_heading', value: cH2 },
+          { key: 'connect_subtext', value: cP },
+          { key: 'footer_copyright', value: fCopy },
+          { key: 'footer_location', value: fLoc }
+        ];
+
+        for (const item of updates) {
+          const { error } = await supabaseClient
+            .from('portfolio_config')
+            .upsert({ key: item.key, value: item.value });
+          if (error) throw error;
+        }
+
+        showToast('Global settings updated!');
+        loadAllDashboardData();
+      } catch (err) {
+        showToast('Error saving configurations: ' + err.message, true);
+      }
+    });
+
+    // ====================================================================
+    // PANEL B: ABOUT BIO SECTIONS
+    // ====================================================================
+    document.getElementById('form-about-bold-config').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const boldText = document.getElementById('cfg-about-bold-text').value;
+      try {
+        const { error } = await supabaseClient
+          .from('portfolio_config')
+          .upsert({ key: 'about_bold_text', value: boldText });
+        if (error) throw error;
+        showToast('Tagline saved!');
+        loadAllDashboardData();
+      } catch (err) {
+        showToast('Error: ' + err.message, true);
+      }
+    });
+
+    function populateAboutParagraphs() {
+      const container = document.getElementById('about-paragraphs-list');
+      if (aboutParagraphs.length === 0) {
+        container.innerHTML = `<p style="color:var(--fg-muted); padding:20px; text-align:center;">No paragraphs created yet. Click "+ Add Paragraph" above.</p>`;
+        return;
+      }
+
+      container.innerHTML = aboutParagraphs.map((p, idx) => {
+        return `
+          <div class="reorder-list-item" data-id="${p.id || 'new_' + idx}">
+            <div class="reorder-handle">
+              <button class="reorder-btn" onclick="moveParagraph(${idx}, -1)">▲</button>
+              <button class="reorder-btn" onclick="moveParagraph(${idx}, 1)">▼</button>
+            </div>
+            <div style="flex:1;">
+              <textarea class="paragraph-text-input" rows="3" placeholder="Enter bio text...">${p.text}</textarea>
+            </div>
+            <button class="btn-danger action-btn" onclick="deleteParagraph(${idx})" style="padding:10px 14px;">🗑</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Add Paragraph Local Array
+    document.getElementById('btn-add-paragraph').addEventListener('click', () => {
+      aboutParagraphs.push({ text: '', sort_order: aboutParagraphs.length });
+      populateAboutParagraphs();
+    });
+
+    // Move paragraph indices
+    window.moveParagraph = function(index, direction) {
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= aboutParagraphs.length) return;
+      
+      const temp = aboutParagraphs[index];
+      aboutParagraphs[index] = aboutParagraphs[targetIndex];
+      aboutParagraphs[targetIndex] = temp;
+      
+      // Update sort order values
+      aboutParagraphs.forEach((p, idx) => p.sort_order = idx);
+      populateAboutParagraphs();
+    }
+
+    // Delete Paragraph
+    window.deleteParagraph = async function(index) {
+      const target = aboutParagraphs[index];
+      
+      // If it exists in database
+      if (target.id) {
+        if (!confirm('Are you sure you want to delete this paragraph from the database?')) return;
+        try {
+          const { error } = await supabaseClient
+            .from('about_paragraphs')
+            .delete()
+            .eq('id', target.id);
+          if (error) throw error;
+          showToast('Paragraph deleted!');
+        } catch (err) {
+          showToast('Error deleting: ' + err.message, true);
+          return;
+        }
+      }
+
+      aboutParagraphs.splice(index, 1);
+      aboutParagraphs.forEach((p, idx) => p.sort_order = idx);
+      populateAboutParagraphs();
+    }
+
+    // Save Bio Paragraphs
+    document.getElementById('btn-save-paragraphs').addEventListener('click', async () => {
+      const items = document.querySelectorAll('.paragraph-text-input');
+      const payload = [];
+      
+      items.forEach((item, idx) => {
+        const pObj = aboutParagraphs[idx];
+        payload.push({
+          id: pObj.id || undefined, // undefined to trigger UUID generate on new rows
+          text: item.value,
+          sort_order: idx
+        });
+      });
+
+      try {
+        const { error } = await supabaseClient
+          .from('about_paragraphs')
+          .upsert(payload);
+        if (error) throw error;
+
+        showToast('Bio paragraphs saved successfully!');
+        loadAllDashboardData();
+      } catch (err) {
+        showToast('Error saving: ' + err.message, true);
+      }
+    });
+
+    // ====================================================================
+    // PANEL C: UPDATES TIMELINE
+    // ====================================================================
+    let timelineListRaw = [];
+    
+    function populateTimelineList(data) {
+      timelineListRaw = data;
+      const container = document.getElementById('timeline-crud-list');
+      if (data.length === 0) {
+        container.innerHTML = `<p style="color:var(--fg-muted); padding:20px; text-align:center;">No timeline entries yet. Add one!</p>`;
+        return;
+      }
+
+      container.innerHTML = data.map(item => {
+        const tagsPills = (item.tags || []).map(t => `<span class="timeline-tag" style="font-size:0.7rem; background:rgba(74,240,196,0.1); color:var(--primary); padding:2px 6px; border-radius:4px; border:1px solid rgba(74,240,196,0.2);">${t}</span>`).join(' ');
+        return `
+          <div class="crud-item">
+            <div class="crud-info">
+              <div class="crud-heading">${item.title}</div>
+              <div class="crud-meta-row">
+                <span>📅 ${item.month} ${item.year}</span>
+                <span>📶 Order: ${item.sort_order}</span>
+                <span>🏷 ${tagsPills || 'None'}</span>
+              </div>
+              <div style="font-size:0.85rem; color:var(--fg-muted); margin-top:8px;">${item.description}</div>
+            </div>
+            <div class="crud-actions">
+              <button class="btn-secondary action-btn" onclick="openEditTimeline('${item.id}')">Edit</button>
+              <button class="btn-danger action-btn" onclick="deleteTimeline('${item.id}')">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Tags array custom field logic
+    const tagInput = document.getElementById('timeline-tag-input');
+    const tagContainer = document.getElementById('timeline-tags-container');
+
+    function renderTags() {
+      // Remove old pills
+      tagContainer.querySelectorAll('.tag-pill').forEach(el => el.remove());
+      // Render new
+      currentTags.forEach(t => {
+        const pill = document.createElement('span');
+        pill.className = 'tag-pill';
+        pill.innerHTML = `${t} <button type="button" onclick="removeTag('${t}')">×</button>`;
+        tagContainer.insertBefore(pill, tagInput);
+      });
+    }
+
+    window.removeTag = function(tag) {
+      currentTags = currentTags.filter(t => t !== tag);
+      renderTags();
+    }
+
+    tagInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        const value = tagInput.value.trim().replace(',', '');
+        if (value && !currentTags.includes(value)) {
+          currentTags.push(value);
+          renderTags();
+        }
+        tagInput.value = '';
+      }
+    });
+
+    document.getElementById('btn-new-timeline').addEventListener('click', () => {
+      document.getElementById('form-timeline').reset();
+      document.getElementById('timeline-id').value = '';
+      document.getElementById('modal-timeline-title').innerText = 'Add Timeline Entry';
+      currentTags = [];
+      renderTags();
+      openModal('modal-timeline');
+    });
+
+    window.openEditTimeline = function(id) {
+      const entry = timelineListRaw.find(e => e.id === id);
+      if (!entry) return;
+
+      document.getElementById('timeline-id').value = entry.id;
+      document.getElementById('timeline-month').value = entry.month;
+      document.getElementById('timeline-year').value = entry.year;
+      document.getElementById('timeline-entry-title').value = entry.title;
+      document.getElementById('timeline-description').value = entry.description;
+      document.getElementById('timeline-sort-order').value = entry.sort_order;
+      
+      currentTags = [...(entry.tags || [])];
+      renderTags();
+      
+      document.getElementById('modal-timeline-title').innerText = 'Edit Timeline Entry';
+      openModal('modal-timeline');
+    }
+
+    // Submit Timeline Form (Add/Update)
+    document.getElementById('form-timeline').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const id = document.getElementById('timeline-id').value;
+      const month = document.getElementById('timeline-month').value;
+      const year = parseInt(document.getElementById('timeline-year').value);
+      const title = document.getElementById('timeline-entry-title').value;
+      const description = document.getElementById('timeline-description').value;
+      const sortOrder = parseInt(document.getElementById('timeline-sort-order').value || 0);
+
+      const payload = {
+        month,
+        year,
+        title,
+        description,
+        tags: currentTags,
+        sort_order: sortOrder
+      };
+
+      if (id) payload.id = id;
+
+      try {
+        const { error } = await supabaseClient
+          .from('timeline_entries')
+          .upsert(payload);
+        
+        if (error) throw error;
+        
+        closeModal('modal-timeline');
+        showToast('Timeline update saved!');
+        loadAllDashboardData();
+      } catch (err) {
+        showToast('Error saving: ' + err.message, true);
+      }
+    });
+
+    // Delete Timeline
+    window.deleteTimeline = async function(id) {
+      if (!confirm('Are you sure you want to delete this timeline entry?')) return;
+      try {
+        const { error } = await supabaseClient
+          .from('timeline_entries')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        showToast('Timeline entry deleted!');
+        loadAllDashboardData();
+      } catch (err) {
+        showToast('Error deleting: ' + err.message, true);
+      }
+    }
+
+    // ====================================================================
+    // PANEL D: VENTURES
+    // ====================================================================
+    let venturesListRaw = [];
+
+    function populateVenturesList(data) {
+      venturesListRaw = data;
+      const container = document.getElementById('ventures-crud-list');
+      if (data.length === 0) {
+        container.innerHTML = `<p style="color:var(--fg-muted); padding:20px; text-align:center;">No ventures added yet. Add one!</p>`;
+        return;
+      }
+
+      container.innerHTML = data.map(item => {
+        return `
+          <div class="crud-item">
+            <div style="display:flex; gap:16px; align-items:center; flex:1;">
+              <img src="${item.logo_url || '../assets/zivo logo.jpeg'}" alt="logo" style="width:48px; height:48px; object-fit:cover; border-radius:6px; background:#000; border:1px solid var(--border);">
+              <div class="crud-info">
+                <div class="crud-heading">${item.name}</div>
+                <div class="crud-meta-row">
+                  <span>📅 Year: ${item.year}</span>
+                  <span>📶 Order: ${item.sort_order}</span>
+                  <span>🔗 Link: ${item.website_url ? `<a href="${item.website_url}" target="_blank">${item.website_url}</a>` : 'None'}</span>
+                </div>
+                <div style="font-size:0.85rem; color:var(--fg-muted); margin-top:8px;">${item.description}</div>
+              </div>
+            </div>
+            <div class="crud-actions" style="margin-left: 16px;">
+              <button class="btn-secondary action-btn" onclick="openEditVenture('${item.id}')">Edit</button>
+              <button class="btn-danger action-btn" onclick="deleteVenture('${item.id}')">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('btn-new-venture').addEventListener('click', () => {
+      document.getElementById('form-venture').reset();
+      document.getElementById('venture-id').value = '';
+      document.getElementById('img-venture-preview').src = '';
+      document.getElementById('modal-venture-title').innerText = 'Add Venture Card';
+      openModal('modal-venture');
+    });
+
+    window.openEditVenture = function(id) {
+      const venture = venturesListRaw.find(v => v.id === id);
+      if (!venture) return;
+
+      document.getElementById('venture-id').value = venture.id;
+      document.getElementById('venture-name').value = venture.name;
+      document.getElementById('venture-year').value = venture.year;
+      document.getElementById('venture-website').value = venture.website_url || '';
+      document.getElementById('venture-description').value = venture.description;
+      document.getElementById('venture-sort-order').value = venture.sort_order;
+      document.getElementById('img-venture-preview').src = venture.logo_url || '';
+      
+      document.getElementById('modal-venture-title').innerText = 'Edit Venture Card';
+      openModal('modal-venture');
+    }
+
+    // Submit Venture Form
+    document.getElementById('form-venture').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const id = document.getElementById('venture-id').value;
+      const name = document.getElementById('venture-name').value;
+      const year = document.getElementById('venture-year').value;
+      const website = document.getElementById('venture-website').value;
+      const description = document.getElementById('venture-description').value;
+      const sortOrder = parseInt(document.getElementById('venture-sort-order').value || 0);
+      const fileInput = document.getElementById('file-venture-logo');
+
+      try {
+        let logoUrl = id ? (venturesListRaw.find(v => v.id === id)?.logo_url || '') : '';
+        
+        // If logo file uploaded
+        if (fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          const path = `logos/logo_${Date.now()}.${file.name.split('.').pop()}`;
+          showToast('Uploading logo file...');
+          logoUrl = await uploadAsset(file, path);
+          document.getElementById('img-venture-preview').src = logoUrl;
+        }
+
+        const payload = {
+          name,
+          year,
+          website_url: website || null,
+          description,
+          logo_url: logoUrl || null,
+          sort_order: sortOrder
+        };
+
+        if (id) payload.id = id;
+
+        const { error } = await supabaseClient
+          .from('ventures')
+          .upsert(payload);
+        
+        if (error) throw error;
+        
+        closeModal('modal-venture');
+        showToast('Venture saved successfully!');
+        loadAllDashboardData();
+      } catch (err) {
+        console.error('Error saving venture:', err);
+        showToast('Error saving venture: ' + err.message, true);
+      }
+    });
+
+    // Delete Venture
+    window.deleteVenture = async function(id) {
+      if (!confirm('Are you sure you want to delete this venture?')) return;
+      try {
+        const { error } = await supabaseClient
+          .from('ventures')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        showToast('Venture card deleted!');
+        loadAllDashboardData();
+      } catch (err) {
+        showToast('Error deleting: ' + err.message, true);
+      }
+    }
+
+    // ====================================================================
+    // PANEL E: CUSTOM SECTIONS
+    // ====================================================================
+    let customListRaw = [];
+
+    function populateCustomList(data) {
+      customListRaw = data;
+      const container = document.getElementById('custom-crud-list');
+      if (data.length === 0) {
+        container.innerHTML = `<p style="color:var(--fg-muted); padding:20px; text-align:center;">No custom sections built yet. Create one!</p>`;
+        return;
+      }
+
+      container.innerHTML = data.map(item => {
+        return `
+          <div class="crud-item">
+            <div class="crud-info">
+              <div class="crud-heading">${item.title} <span style="font-size:0.8rem; background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:20px; margin-left:8px;">${item.layout_type}</span></div>
+              <div class="crud-meta-row">
+                <span>📍 Insert after: <strong>${item.insert_after}</strong></span>
+                <span>📶 Order: ${item.sort_order}</span>
+                <span>👁 Visible: <strong>${item.is_visible ? 'Yes' : 'No'}</strong></span>
+              </div>
+            </div>
+            <div class="crud-actions">
+              <button class="btn-secondary action-btn" onclick="openEditCustom('${item.id}')">Edit</button>
+              <button class="btn-danger action-btn" onclick="deleteCustom('${item.id}')">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Manage dynamic fields display depending on layout choice
+    window.toggleCustomLayoutForm = function() {
+      const type = document.getElementById('custom-layout-type').value;
+      document.querySelectorAll('.layout-subform').forEach(el => el.style.display = 'none');
+      
+      const subform = document.getElementById(`layout-opt-${type}`);
+      if (subform) subform.style.display = 'block';
+    }
+
+    // Dynamic builders for list items in Card Grid & Image Gallery custom section options
+    let cardCount = 0;
+    window.addCardToCustomForm = function(cData = { title: '', description: '', image_url: '', link_url: '', link_text: '' }) {
+      const container = document.getElementById('custom-cards-list');
+      const idx = cardCount++;
+      const cardEl = document.createElement('div');
+      cardEl.className = 'form-grid-card-input';
+      cardEl.style = 'border:1px solid var(--border); padding:16px; border-radius:8px; margin-bottom:12px; position:relative; background:rgba(0,0,0,0.1);';
+      cardEl.innerHTML = `
+        <button type="button" class="btn-danger" style="position:absolute; top:8px; right:8px; padding:4px 8px; font-size:0.75rem;" onclick="this.parentElement.remove()">Remove Card</button>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Card Title</label>
+            <input type="text" class="c-title" value="${cData.title}" required placeholder="My Skill">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Image URL (Optional)</label>
+            <input type="url" class="c-image" value="${cData.image_url}" placeholder="https://...">
+          </div>
+          <div class="form-group span-full">
+            <label class="form-label">Description Text</label>
+            <textarea class="c-desc" rows="2" placeholder="Brief details about this skill...">${cData.description}</textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Link URL (Optional)</label>
+            <input type="url" class="c-link" value="${cData.link_url}" placeholder="https://...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Link Display Text (Optional)</label>
+            <input type="text" class="c-linktext" value="${cData.link_text}" placeholder="e.g. Learn more ↗">
+          </div>
+        </div>
+      `;
+      container.appendChild(cardEl);
+    }
+
+    let imageCount = 0;
+    window.addImageToCustomForm = function(imgData = { url: '', caption: '' }) {
+      const container = document.getElementById('custom-images-list');
+      const imgEl = document.createElement('div');
+      imgEl.className = 'form-grid-image-input';
+      imgEl.style = 'border:1px solid var(--border); padding:16px; border-radius:8px; margin-bottom:12px; position:relative; background:rgba(0,0,0,0.1); display:flex; gap:16px; align-items:flex-end;';
+      imgEl.innerHTML = `
+        <div style="flex:1;">
+          <label class="form-label">Image URL</label>
+          <input type="url" class="img-url" value="${imgData.url}" required placeholder="https://...">
+        </div>
+        <div style="flex:1;">
+          <label class="form-label">Caption (Optional)</label>
+          <input type="text" class="img-caption" value="${imgData.caption}" placeholder="Image description">
+        </div>
+        <button type="button" class="btn-danger" style="padding:12px 14px;" onclick="this.parentElement.remove()">🗑</button>
+      `;
+      container.appendChild(imgEl);
+    }
+
+    document.getElementById('btn-new-custom').addEventListener('click', () => {
+      document.getElementById('form-custom').reset();
+      document.getElementById('custom-id').value = '';
+      
+      document.getElementById('custom-cards-list').innerHTML = '';
+      document.getElementById('custom-images-list').innerHTML = '';
+      
+      document.getElementById('modal-custom-title').innerText = 'Create Custom Section';
+      toggleCustomLayoutForm();
+      openModal('modal-custom');
+    });
+
+    window.openEditCustom = function(id) {
+      const sec = customListRaw.find(s => s.id === id);
+      if (!sec) return;
+
+      document.getElementById('custom-id').value = sec.id;
+      document.getElementById('custom-title').value = sec.title;
+      document.getElementById('custom-insert-after').value = sec.insert_after;
+      document.getElementById('custom-layout-type').value = sec.layout_type;
+      document.getElementById('custom-sort-order').value = sec.sort_order;
+      document.getElementById('custom-is-visible').checked = sec.is_visible;
+
+      // Reset dynamic arrays
+      document.getElementById('custom-cards-list').innerHTML = '';
+      document.getElementById('custom-images-list').innerHTML = '';
+
+      // Populate layout-specific contents
+      const content = sec.content || {};
+      if (sec.layout_type === 'text') {
+        const paragraphs = content.paragraphs || [];
+        document.getElementById('custom-text-paragraphs').value = paragraphs.join('\n\n');
+      } else if (sec.layout_type === 'card_grid') {
+        const cards = content.cards || [];
+        cards.forEach(c => addCardToCustomForm(c));
+      } else if (sec.layout_type === 'image_gallery') {
+        const images = content.images || [];
+        images.forEach(img => addImageToCustomForm(img));
+      } else if (sec.layout_type === 'video_embed') {
+        document.getElementById('custom-video-url').value = content.embed_url || '';
+      } else if (sec.layout_type === 'mixed') {
+        document.getElementById('custom-mixed-html').value = content.html || '';
+      }
+
+      toggleCustomLayoutForm();
+      document.getElementById('modal-custom-title').innerText = 'Edit Custom Section';
+      openModal('modal-custom');
+    }
+
+    // Submit Custom Section Form
+    document.getElementById('form-custom').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const id = document.getElementById('custom-id').value;
+      const title = document.getElementById('custom-title').value;
+      const insertAfter = document.getElementById('custom-insert-after').value;
+      const layoutType = document.getElementById('custom-layout-type').value;
+      const sortOrder = parseInt(document.getElementById('custom-sort-order').value || 0);
+      const isVisible = document.getElementById('custom-is-visible').checked;
+
+      // Package section content JSON dynamically based on type
+      let content = {};
+      
+      if (layoutType === 'text') {
+        const rawText = document.getElementById('custom-text-paragraphs').value;
+        const paragraphs = rawText.split('\n\n').map(p => p.trim()).filter(p => p !== '');
+        content = { paragraphs };
+      } else if (layoutType === 'card_grid') {
+        const cards = [];
+        document.querySelectorAll('.form-grid-card-input').forEach(cardEl => {
+          cards.push({
+            title: cardEl.querySelector('.c-title').value,
+            description: cardEl.querySelector('.c-desc').value,
+            image_url: cardEl.querySelector('.c-image').value,
+            link_url: cardEl.querySelector('.c-link').value,
+            link_text: cardEl.querySelector('.c-linktext').value
+          });
+        });
+        content = { cards };
+      } else if (layoutType === 'image_gallery') {
+        const images = [];
+        document.querySelectorAll('.form-grid-image-input').forEach(imgEl => {
+          images.push({
+            url: imgEl.querySelector('.img-url').value,
+            caption: imgEl.querySelector('.img-caption').value
+          });
+        });
+        content = { images };
+      } else if (layoutType === 'video_embed') {
+        const embedUrl = document.getElementById('custom-video-url').value;
+        content = { embed_url: embedUrl };
+      } else if (layoutType === 'mixed') {
+        const html = document.getElementById('custom-mixed-html').value;
+        content = { html };
+      }
+
+      const payload = {
+        title,
+        insert_after: insertAfter,
+        layout_type: layoutType,
+        sort_order: sortOrder,
+        is_visible: isVisible,
+        content
+      };
+
+      if (id) payload.id = id;
+
+      try {
+        const { error } = await supabaseClient
+          .from('custom_sections')
+          .upsert(payload);
+        
+        if (error) throw error;
+        
+        closeModal('modal-custom');
+        showToast('Custom section saved!');
+        loadAllDashboardData();
+      } catch (err) {
+        showToast('Error saving: ' + err.message, true);
+      }
+    });
+
+    // Delete Custom Section
+    window.deleteCustom = async function(id) {
+      if (!confirm('Are you sure you want to delete this custom section?')) return;
+      try {
+        const { error } = await supabaseClient
+          .from('custom_sections')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        showToast('Custom section deleted!');
+        loadAllDashboardData();
+      } catch (err) {
+        showToast('Error deleting: ' + err.message, true);
+      }
+    }
+  </script>
+</body>
+</html>

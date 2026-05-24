@@ -1,0 +1,690 @@
+/* ==========================================================================
+   CSS DESIGN SYSTEM & TOKENS (Sleek Tech Hybrid Theme)
+   ========================================================================== */
+
+:root {
+    /* Color Palette */
+    --bg-dark: #0a0e17;            /* Deep slate-carbon backdrop */
+    --bg-dark-card: #121824;       /* Secondary dark panel */
+    --bg-light-panel: #f8fafc;     /* Clean light-grey card panel */
+    --bg-white: #ffffff;           /* Crisp solid white card panel */
+    
+    /* Text Colors */
+    --text-white: #ffffff;
+    --text-dark: #0f172a;          /* Dark slate for light panels */
+    --text-muted-dark: #64748b;    /* Secondary text on light panels */
+    --text-muted-light: #94a3b8;   /* Secondary text on dark background */
+    
+    /* Accents */
+    --color-cyan: #00f0ff;         /* Electric cyan/ice-blue */
+    --color-cyan-dim: rgba(0, 240, 255, 0.15);
+    --color-border-dark: rgba(255, 255, 255, 0.08);
+    --color-border-light: rgba(15, 23, 42, 0.08);
+    
+    /* Fonts */
+    --font-heading: 'Outfit', sans-serif;
+    --font-mono: 'Space Grotesk', monospace;
+    --font-body: 'Plus Jakarta Sans', sans-serif;
+    
+    --transition-clean: cubic-bezier(0.25, 1, 0.5, 1);
+    --transition-duration: 0.5s;
+}
+
+/* ==========================================================================
+   RESET & BASICS
+   ========================================================================== */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+    background-color: var(--bg-dark);
+    color: var(--text-white);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+body {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-cyan);
+}
+
+/* ==========================================================================
+   SUBTLE TECH BACKGROUND LINES
+   ========================================================================== */
+
+.grid-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    pointer-events: none;
+    background-size: 80px 80px;
+    background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+}
+
+.grid-glow-spot {
+    position: absolute;
+    top: -10%;
+    right: 5%;
+    width: 60vw;
+    height: 60vw;
+    background: radial-gradient(circle, rgba(0, 240, 255, 0.03) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   CUSTOM CURSOR (Subtle pointer dots)
+   ========================================================================== */
+
+#custom-cursor {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--color-cyan);
+    border-radius: 50%;
+    position: fixed;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 9999;
+    transition: width 0.2s, height 0.2s, background-color 0.2s;
+}
+
+#custom-cursor-dot {
+    width: 4px;
+    height: 4px;
+    background-color: var(--color-cyan);
+    border-radius: 50%;
+    position: fixed;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 9999;
+}
+
+body.cursor-hover #custom-cursor {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(0, 240, 255, 0.05);
+}
+
+/* ==========================================================================
+   HEADER NAVIGATION
+   ========================================================================== */
+
+.site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-border-dark);
+}
+
+.header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.site-logo {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-white);
+    text-decoration: none;
+}
+
+.desktop-nav {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+}
+
+.desktop-nav a {
+    text-decoration: none;
+    color: var(--text-muted-light);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.desktop-nav a:hover {
+    color: var(--text-white);
+}
+
+.desktop-nav .nav-cta {
+    color: var(--color-cyan);
+    border: 1px solid var(--color-cyan);
+    padding: 0.4rem 1.2rem;
+    border-radius: 20px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.desktop-nav .nav-cta:hover {
+    background-color: var(--color-cyan);
+    color: var(--bg-dark);
+}
+
+/* ==========================================================================
+   MAIN CONTAINERS & SECTIONS
+   ========================================================================== */
+
+.content-wrapper {
+    position: relative;
+    z-index: 10;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.reveal-on-scroll {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 10rem 0 6rem 0;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s var(--transition-clean), transform 0.8s var(--transition-clean);
+}
+
+.reveal-on-scroll.active-section {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Section Badges / Labels */
+.section-badge {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-title {
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+    color: var(--text-white);
+}
+
+.section-title.margin-bottom {
+    margin-bottom: 3.5rem;
+}
+
+.section-title.centered {
+    text-align: center;
+}
+
+.section-desc.centered {
+    text-align: center;
+    max-width: 600px;
+    margin: 1.5rem auto 4rem auto;
+    color: var(--text-muted-light);
+    font-size: 1.1rem;
+    font-weight: 300;
+}
+
+/* ==========================================================================
+   HERO SECTION
+   ========================================================================== */
+
+.hero-section {
+    align-items: flex-start;
+}
+
+.hero-tag {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--color-cyan);
+    border: 1px solid var(--color-cyan-dim);
+    background: rgba(0, 240, 255, 0.05);
+    padding: 0.4rem 1rem;
+    border-radius: 4px;
+    margin-bottom: 2rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.hero-name {
+    font-family: var(--font-heading);
+    font-size: clamp(3.5rem, 8vw, 6.5rem);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #ffffff 40%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-role {
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: 600;
+    color: var(--color-cyan);
+    margin-bottom: 2rem;
+    letter-spacing: -0.01em;
+}
+
+.hero-statement {
+    font-size: clamp(1.1rem, 2vw, 1.35rem);
+    font-weight: 300;
+    color: var(--text-muted-light);
+    max-width: 680px;
+    line-height: 1.5;
+    margin-bottom: 3.5rem;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1.5rem;
+}
+
+/* ==========================================================================
+   ABOUT ME SECTION
+   ========================================================================== */
+
+.grid-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 4rem;
+    align-items: flex-start;
+}
+
+.editorial-p p {
+    font-size: 1.15rem;
+    color: var(--text-muted-light);
+    margin-bottom: 1.75rem;
+    font-weight: 300;
+    line-height: 1.7;
+}
+
+.editorial-p p:last-child {
+    margin-bottom: 0;
+}
+
+/* ==========================================================================
+   ACCOMPLISHMENTS & EXPERIENCE CARDS (Stark White Panels)
+   ========================================================================== */
+
+.timeline-container {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.experience-card {
+    background-color: var(--bg-white);
+    color: var(--text-dark);
+    border-radius: 12px;
+    padding: 3rem;
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 3rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s var(--transition-clean), box-shadow 0.3s var(--transition-clean);
+}
+
+.experience-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25), 0 0 20px rgba(0, 240, 255, 0.1);
+}
+
+.card-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    border-right: 1px solid var(--color-border-light);
+    padding-right: 2rem;
+}
+
+.exp-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background-color: var(--bg-light-panel);
+    color: var(--text-dark);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.exp-title {
+    font-family: var(--font-heading);
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+}
+
+.exp-time {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted-dark);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.exp-body p {
+    font-size: 1.05rem;
+    color: var(--text-muted-dark);
+    margin-bottom: 1.25rem;
+    font-weight: 400;
+    line-height: 1.65;
+}
+
+.exp-body p strong {
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+.exp-body p:last-child {
+    margin-bottom: 0;
+}
+
+/* ==========================================================================
+   VENTURES SECTION (Premium High Contrast Panels)
+   ========================================================================== */
+
+.ventures-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+}
+
+.venture-card {
+    background-color: var(--bg-white);
+    color: var(--text-dark);
+    border-radius: 12px;
+    padding: 3.5rem 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 380px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    border: 1px solid transparent;
+    transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+
+.venture-card:hover {
+    border-color: var(--color-cyan);
+    transform: translateY(-6px);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25), 0 0 25px rgba(0, 240, 255, 0.15);
+}
+
+.venture-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+}
+
+.venture-name {
+    font-family: var(--font-heading);
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+}
+
+.venture-tag {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted-dark);
+    text-transform: uppercase;
+}
+
+.venture-link-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: var(--bg-light-panel);
+    color: var(--text-dark);
+    text-decoration: none;
+    transition: background-color 0.3s, color 0.3s, transform 0.3s;
+}
+
+.venture-card:hover .venture-link-icon {
+    background-color: var(--color-cyan);
+    color: var(--bg-dark);
+    transform: scale(1.1);
+}
+
+.venture-body p {
+    font-size: 1.05rem;
+    color: var(--text-muted-dark);
+    line-height: 1.65;
+    font-weight: 400;
+    margin-bottom: 2.5rem;
+}
+
+.venture-footer {
+    border-top: 1px solid var(--color-border-light);
+    padding-top: 1.5rem;
+}
+
+.venture-url {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.venture-card:hover .venture-url {
+    color: var(--color-cyan-dim);
+    text-shadow: 0 0 1px var(--color-cyan);
+}
+
+/* ==========================================================================
+   CONNECT & FOOTER
+   ========================================================================== */
+
+.connect-section {
+    min-height: calc(100vh - 100px);
+    justify-content: space-between;
+}
+
+.social-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+    margin-top: 2rem;
+}
+
+.social-btn {
+    background-color: var(--bg-dark-card);
+    border: 1px solid var(--color-border-dark);
+    border-radius: 8px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    text-decoration: none;
+    color: var(--text-white);
+    transition: background-color 0.3s, border-color 0.3s, transform 0.3s;
+}
+
+.social-btn:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+    border-color: var(--color-cyan);
+    transform: translateY(-3px);
+}
+
+.social-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted-light);
+    transition: color 0.3s;
+}
+
+.social-btn:hover .social-icon {
+    color: var(--color-cyan);
+}
+
+.social-name {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.01em;
+}
+
+.site-footer {
+    width: 100%;
+    border-top: 1px solid var(--color-border-dark);
+    padding: 4rem 0 2rem 0;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    margin-top: auto;
+}
+
+.site-footer p {
+    font-size: 0.85rem;
+    color: var(--text-muted-light);
+    font-family: var(--font-mono);
+}
+
+/* ==========================================================================
+   BUTTONS UTILITY
+   ========================================================================== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2.25rem;
+    border-radius: 30px;
+    text-decoration: none;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: all 0.3s var(--transition-clean);
+}
+
+.btn-primary {
+    background-color: var(--color-cyan);
+    color: var(--bg-dark);
+    box-shadow: 0 8px 24px rgba(0, 240, 255, 0.25);
+}
+
+.btn-primary:hover {
+    background-color: #5cf5ff;
+    box-shadow: 0 12px 30px rgba(0, 240, 255, 0.4);
+    transform: translateY(-3px);
+}
+
+.btn-outline {
+    background-color: transparent;
+    color: var(--text-white);
+    border: 1px solid var(--color-border-dark);
+}
+
+.btn-outline:hover {
+    border-color: var(--color-cyan);
+    background-color: rgba(0, 240, 255, 0.03);
+    transform: translateY(-3px);
+}
+
+/* ==========================================================================
+   RESPONSIVENESS
+   ========================================================================== */
+
+@media (max-width: 992px) {
+    .grid-two-col {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .experience-card {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 2.5rem;
+    }
+    
+    .card-meta {
+        border-right: none;
+        border-bottom: 1px solid var(--color-border-light);
+        padding-right: 0;
+        padding-bottom: 1.5rem;
+    }
+    
+    .ventures-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .venture-card {
+        min-height: auto;
+        padding: 2.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .desktop-nav {
+        display: none; /* Simplify nav on mobile */
+    }
+    
+    .content-wrapper {
+        padding: 0 1.5rem;
+    }
+    
+    .reveal-on-scroll {
+        padding: 8rem 0 4rem 0;
+    }
+    
+    #custom-cursor, #custom-cursor-dot {
+        display: none;
+    }
+}

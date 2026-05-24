@@ -1,0 +1,273 @@
+0
+%
+about
+updates
+blog
+contact
+CONTACT
+github
+medium
+linkedin
+instagram
+google scholar
+hello@toluwani.ai
+Seeking answers to the big questions!
+It seems like I&#x27;ve gotten your attention! I&#x27;m Toluwani and I ask a lot of questions. I am also a Machine Learning PhD Candidate at
+MBZUAI.
+Say Hi!
+Find out more!
+The Essentials
+Turns out, this is all I really need
+World
+Brain
+Sleep
+Updates
+2012
+2014
+2015
+2016
+2017
+2018
+2019
+2020
+2021
+2022
+2023
+2024
+2025
+2026
+October
+Started as a Computer Science student at Adeleke University.
+July
+Completed Secondary School and got my O&#x27; Level Certificates.
+November
+Completed my internship at INTECU.
+August
+Started working as a Network Analyst Intern at INTECU, Obafemi Awolowo University, Osun State.
+November
+Completed my internship at LAUTECH.
+August
+Started working as a System Engineering Intern at MIS Unit, LAUTECH Teaching Hospital, Osun State.
+November
+Started my one year of compulsory service (NYSC) for my country.
+July
+Graduated and got my bachelor&#x27;s degree in computer science.
+November
+Concluded my year of compulsory service
+April
+Became the Flag Cadet of the FRSC CDS group.
+January
+Started working as a Systems Engineer at the Bureau of Information and Communication Technology (BICT), Ekiti State Government.
+Joined the Federal Road Safety Commission (FRSC) Community Development Service (CDS) Group.
+December
+Left the Osun State Bureau of Work Efficiency & Productivity to focus on my graduate studies.
+May
+Started my master&#x27;s degree in computer science at the University of Ibadan.
+January
+Started working as a Data Analyst at the Osun State Bureau of Work Efficiency & Productivity.
+January 2019
+Started working as a Graduate Research & Teaching Assistant at the University of Ibadan.
+November
+Flew to Abu Dhabi to commence my master&#x27;s degree at MBZUAI.
+June
+Accepted a fully funded scholarship to study Machine Learning at the Mohamed Bin Zayed University of Artificial Intelligence (MBZUAI), UAE.
+May
+Graduated and got my master&#x27;s degree in computer science.
+February
+Stopped working as a Graduate Research Assistant at University of Ibadan.
+2021 (THE BIG JUMP)
+Before this, my understanding of AI was rather limited. I had a grasp of the concept of automation, but I never really connected it to AI. My perception of AI was mainly influenced by what I had seen in movies, where it was often depicted as robotics. As a result, I developed a strong desire to study robotics based on those impressions. I also saw a video on YouTube which made me interested in anything automation.
+August
+Started working as a Research Assistant at the SPriNT-AI lab.
+January
+Started studying at MBZUAI.
+December
+My first ever research paper, based on my master&#x27;s thesis titled, &quot;PolyKervNets: Activation-Free Neural Networks for Efficient Private Inference&quot; was accepted for oral presentation at the 2023 IEEE Secure and Trustworthy Machine Learning (SaTML) conference.
+[Paper]
+Published an article on Medium titled, &quot;What AI Still Can&#x27;t Do #003&quot;.
+[Read]
+Published an article on Medium titled, &quot;Choosing a Learning Rate for DNNs&quot;.
+[Read]
+October
+Defended my master&#x27;s thesis titled, &quot;PolyKervNets: Activation-Free Neural Networks for Efficient Private Inference&quot; at the Mohamed Bin Zayed University of Artificial Intelligence.
+August
+Published an article on Medium titled, &quot;What AI Still Can&#x27;t Do #002&quot;.
+[Read]
+Published an article on Medium titled, &quot;Impact of Optimizers in Image Classifiers&quot;.
+[Read]
+July
+Gave a talk titled, &quot;Ethical Perspectives of AI&quot; to graduate students at the Department of Material Sciences, University of Denver.
+[Slides]
+Published an article on Medium titled, &quot;What AI Still Can&#x27;t Do #001&quot;.
+[Read]
+August
+Applied for my first patent. [More details to come]
+Started PhD in Machine Learning at
+MBZUAI.
+July
+Published an article on Medium titled, &quot;Accented Speech Recognition: The Inclusive Realm of Automatic Speech Recognition Systems.&quot;
+[Read]
+June
+Our preprint, &quot;SSIVD-Net: A Novel Salient Super Image Classification & Detection Technique for Weaponized Violence&quot; has been uploaded on ResearchSquare and ArXiv. Update!!! It has been accepted for presentation at the 2024 SAI Computing Conference and will appear in the Springer Lecture Notes in Networks and Systems publication. Congratulations to the team.
+[ResearchSquare]
+[ArXiv]
+My preprint &quot;Unlocking Pandora&#x27;s Box: Unveiling the Elusive Realm of AI Text Detection&quot; has been uploaded on SSRN.
+[Paper]
+Published an article on Medium titled, &quot;AI Text Detectors: Amazing Sleuths or WHAT?&quot;
+[Read]
+May
+Got my first football coaching license, &quot;EE Playmaker&quot; by the English Football Association.
+April
+Concluded my internship at
+G42 Healthcare.
+February
+Published an article on Medium titled, &quot;Learning Rate Schedulers&quot;.
+[Read]
+Started a new exciting role as an Applied Science Intern at
+G42 Healthcare.
+Started a new exciting role as an AI Researcher at the MCR and Metaverse Lab at
+MBZUAI.
+January
+Graduated from Mohamed Bin Zayed University of Artificial Intelligence with a MSc in Machine Learning.
+December
+Our paper, &quot;On the Reliability of Large Language Models to Misinformed and Demographically-Informed Prompts&quot;, has been accepted for inclusion and publication in AI Magazine (official journal of the AAAI). Congrats to the team. Published version coming out soon!
+[Preprint]
+April
+Our paper, &quot;Redefining Contributions: Shapley-Driven Federated Learning&quot;, has been accepted for presentation and publication at the 33rd International Joint Conference on Artificial Intelligence (IJCAI), Jeju, Korea. Congrats to the team.
+[Paper]
+January
+Our paper, &quot;ScholarFace: Scanning Faces, Discovering Minds&quot;, has been published in the 2024 IEEE International Conference on Consumer Electronics (ICCE). Congratulations to the team!
+[Paper]
+Our preprint, &quot;On the Reliability of Large Language Models to Misinformed and Demographically-Informed Prompts&quot;, has been uploaded on SSRN.
+[Preprint]
+May
+Our paper, &quot;Optimizing Adaptive Attacks against Content Watermarks for Language Models&quot; has been accepted as a spotlight paper at ICML 2025! Congratulations to the team.
+[Paper]
+April
+I am now a PhD Candidate. Looking forward to the next phase of my research journey.
+I got the MBZUAI Conference Travel Scholarship to present our work on &quot;Optimizing Adaptive Attacks against Content Watermarks for Language Models&quot; which was accepted at ICLR-WMARK 2025!
+January
+Our paper, &quot;On the Reliability of Large Language Models to Misinformed and Demographically-Informed Prompts&quot;, has been accepted at AAAI-AI Magazine. Congrats to the team.
+[Paper]
+April
+I am at the Center for Frontier AI Research, A*STAR Singapore for a 3-month research visit. Looking forward to collaborating with the amazing researchers here.
+March
+Our paper, &quot;MirrorCheck: Efficient Adversarial Defense for Vision-Language Models&quot;, has been accepted at CVPR (AdvML) 2026! Congrats to the team.
+[Paper]
+February
+Our startup idea is incubated under Kora. Excited for this new chapter.
+[Learn more about Kora]
+Publications
+Check my latest research on Google Scholar
+Watermarking Should Be Treated as a Monitoring Primitive
+Toluwani Aremu, Nils Lukas, Jie Zhang
+arXiv
+2026
+Robust Safety Monitoring of Language Models via Activation Watermarking
+Toluwani Aremu, Daniil Ognev, Samuele Poppi, Nils Lukas
+arXiv
+2026
+Mitigating Watermark Forgery in Generative Models via Randomized Key Selection
+Toluwani Aremu, Noor Hussein, Munachiso Nwadike, Samuele Poppi, Jie Zhang, Karthik Nandakumar, Neil Gong, Nils Lukas
+arXiv
+2026
+Aligning Stuttered-Speech Research with End-User Needs: Review, Survey, and Guidelines
+Hawau Toyin, Mutiah Apampa, Toluwani Aremu, Humaid Alblooshi, A. Valente, G. Leal, Z. Yue, Z. Talat, Hanan Aldarmaki
+arXiv
+2026
+MirrorCheck: Efficient Adversarial Defense for Vision-Language Models
+Samar Fares*, Klea Ziu*, Toluwani Aremu*, Nikita Durasov, Martin Takáč, Pascal Fua, Karthik Nandakumar, Ivan Laptev
+CVPR (AdvML)
+2026
+Optimizing Adaptive Attacks against Watermarks for Language Models
+Abdulrahman Diaa, Toluwani Aremu, Nils Lukas
+ICML [Spotlight🏆]
+2025
+On the reliability of Large Language Models to misinformed and demographically informed prompts
+Toluwani Aremu, Kemi Akinwehinmi, Emeka Nwagu, Syed Ahmed, Rita Orji, P. Arnau Del Amo, Abdulmotaleb El Saddik
+AAAI Magazine
+2025
+Library-Like Behavior In Language Models is Enhanced by Self-Referencing Causal Cycles
+Munachiso Nwadike, Zangir Iklassov, Toluwani Aremu, T. Hiraoka, B. Heinzerling, V. Bojkovic, H. Alqaubeh, Martin Takáč, Kentaro Inui
+ACL (Main)
+2025
+All Languages Matter: Evaluating LMMs on Culturally Diverse 100 Languages
+Ashmal Vayani, Dinura Dissanayake, Hasindri Watawana, Noor Hassan, ..., Toluwani Aremu, et al.
+CVPR [Spotlight🏆]
+2025
+A Call for Patience and Perspective
+Toluwani Aremu
+X (Social)
+2025
+Human Social Mirrors and AI Looking Glass
+Toluwani Aremu
+Towards AI
+2025
+The Thinker vs. The Builder
+Toluwani Aremu
+X (Social)
+2025
+Slow down!
+Toluwani Aremu
+X (Social)
+2025
+ScholarFace: Scanning Faces, Discovering Minds
+Wong Yu Kang, Toluwani Aremu, Younes Balah, Maryam Nadeem, Ivo Gollini Navarrete, Abdulmotaleb El Saddik
+Patent
+2025
+The Dark Side of Boycotting and Cancel Culture
+Toluwani Aremu
+X (Social)
+2024
+Redefining Contributions: Shapley-Driven Federated Learning
+Nurbek Tastan, Samar Fares, Toluwani Aremu, Samuel Horvath, Karthik Nandakumar
+IJCAI
+2024
+SSIVD-Net: A Novel Salient Super Image Classification & Detection Technique for Weaponized Violence
+Toluwani Aremu, Li Zhiyuan, Reem Alameeri, Mustaqeem Khan, Abdulmotaleb El Saddik
+SAI
+2024
+Accented Speech Recognition: The Inclusive Realm of Automatic Speech Recognition Systems
+Toluwani Aremu
+Medium
+2023
+AI Text Detectors: Amazing Sleuths or WHAT?
+Toluwani Aremu
+Medium
+2023
+Unlocking Pandora&#x27;s Box: Unveiling the Elusive Realm of AI Text Detection
+Toluwani Aremu
+SSRN
+2023
+Learning Rate Schedulers
+Toluwani Aremu
+Medium
+2023
+PolyKervNets: Activation-free Neural Networks For Efficient Private Inference
+Toluwani Aremu, Karthik Nandakumar
+IEEE SaTML
+2023
+Choosing a Learning Rate for DNNs
+Toluwani Aremu
+Medium
+2022
+What AI Still Can’t Do #003
+Toluwani Aremu
+Medium
+2022
+Impact of Optimizers in Image Classifiers
+Toluwani Aremu
+Medium
+2022
+What AI still can’t do #002
+Toluwani Aremu
+Medium
+2022
+What AI still can’t do #001
+Toluwani Aremu
+Medium
+2022
+Let’s work together
+Got a cool research idea or just want to muse about the future? Hit me up!
+Linkedin
+Email
