@@ -31,6 +31,7 @@
       --card-shadow: 0 20px 64px rgba(0,0,0,0.55);
       --toggle-bg: rgba(255, 255, 255, 0.06);
       --toggle-border: rgba(255, 255, 255, 0.12);
+      --btn-text: #080c10;
     }
     html.light {
       --bg: transparent;           /* gradient handles it */
@@ -45,6 +46,7 @@
       --card-shadow: 0 8px 40px rgba(0,0,0,0.09);
       --toggle-bg: rgba(255, 255, 255, 0.55);
       --toggle-border: rgba(10,14,20,0.12);
+      --btn-text: #ffffff;
     }
 
     /* ====================================================================
@@ -543,6 +545,75 @@
     .card-meta { font-size:0.74rem; color:var(--fg-light); text-align:center; margin-top:14px; }
 
     /* ====================================================================
+       NOTIFY / NEWSLETTER
+    ==================================================================== */
+    #notify-section { border-top: 1px solid var(--border); }
+    .notify-inner { max-width:580px; margin:0 auto; text-align:center; }
+    .notify-inner h2 {
+      font-family:'DM Serif Display',serif;
+      font-size:clamp(1.9rem,5vw,2.8rem); font-weight:400;
+      margin-bottom:14px; letter-spacing:-0.02em;
+    }
+    .notify-inner p { font-size:0.98rem; color:var(--fg-muted); line-height:1.6; margin-bottom:28px; }
+    
+    .notify-form {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .notify-form input[type="email"] {
+      flex: 1;
+      min-width: 260px;
+      max-width: 360px;
+      padding: 14px 20px;
+      border-radius: 48px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .notify-form input[type="email"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-dim);
+    }
+    .btn-solid {
+      padding: 14px 28px;
+      border-radius: 48px;
+      background: var(--primary);
+      border: 1.5px solid var(--primary);
+      color: var(--btn-text);
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: background 0.2s, color 0.2s, transform 0.2s;
+    }
+    .btn-solid:hover {
+      background: transparent;
+      color: var(--primary);
+      transform: translateY(-2px);
+    }
+    .btn-solid:active {
+      transform: translateY(0);
+    }
+    .notify-message {
+      font-size: 0.9rem;
+      margin-top: 10px;
+      min-height: 20px;
+      font-weight: 500;
+      transition: opacity 0.3s;
+    }
+    .notify-message.success {
+      color: #3be095;
+    }
+    .notify-message.error {
+      color: #ff5e7e;
+    }
+
+    /* ====================================================================
        CONTACT
     ==================================================================== */
     #contact-section { border-top:1px solid var(--border); }
@@ -1028,6 +1099,21 @@
   </section>
 
   <!-- =================================================================
+       STAY IN TOUCH / NEWSLETTER
+  ================================================================== -->
+  <section id="notify-section" class="reveal">
+    <div class="notify-inner">
+      <h2>Stay in touch</h2>
+      <p>Sign up to get notified on new ventures, building progress, and engineering logs.</p>
+      <form id="notify-form" class="notify-form">
+        <input type="email" id="notify-email" placeholder="Enter your email" required />
+        <button type="submit" class="btn-solid">Notify Me</button>
+      </form>
+      <div id="notify-message" class="notify-message"></div>
+    </div>
+  </section>
+
+  <!-- =================================================================
        CONTACT
   ================================================================== -->
   <section id="contact-section">
@@ -1484,6 +1570,57 @@
           if (i % 3 === 2) el.classList.add('reveal-delay-2');
         }
         obs.observe(el);
+      });
+    }
+
+    /* ---- NEWSLETTER FORM SUBMISSION ---- */
+    const notifyForm = document.getElementById('notify-form');
+    const notifyInput = document.getElementById('notify-email');
+    const notifyMessage = document.getElementById('notify-message');
+
+    if (notifyForm) {
+      notifyForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = notifyInput.value.trim();
+        if (!email) return;
+
+        notifyInput.disabled = true;
+        const submitBtn = notifyForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerText = 'Submitting...';
+        }
+
+        notifyMessage.className = 'notify-message';
+        notifyMessage.innerText = '';
+        notifyMessage.style.opacity = '1';
+
+        try {
+          const sourcePage = window.location.href;
+          const { error } = await supabaseClient
+            .from('newsletter_signups')
+            .insert([{ email, source_page: sourcePage }]);
+
+          if (error) throw error;
+
+          notifyMessage.classList.add('success');
+          notifyMessage.innerText = 'Successfully subscribed! Thank you.';
+          notifyForm.reset();
+
+          setTimeout(() => {
+            notifyMessage.style.opacity = '0';
+          }, 5000);
+        } catch (err) {
+          console.error('Newsletter error:', err);
+          notifyMessage.classList.add('error');
+          notifyMessage.innerText = 'Error submitting. Please try again.';
+        } finally {
+          notifyInput.disabled = false;
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Notify Me';
+          }
+        }
       });
     }
 

@@ -582,6 +582,22 @@
         justify-content: flex-end;
       }
     }
+    /* Signups table styling */
+    #signups-table th, #signups-table td {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    #signups-table tr:last-child td {
+      border-bottom: none;
+    }
+    #signups-table th span {
+      font-size: 0.75rem;
+      opacity: 0.6;
+      margin-left: 4px;
+    }
+    #signups-table tr:hover {
+      background: rgba(255, 255, 255, 0.01);
+    }
   </style>
 </head>
 <body>
@@ -652,6 +668,9 @@
         </button>
         <button class="tab-btn" data-tab="tab-custom">
           🧩 Custom Sections
+        </button>
+        <button class="tab-btn" data-tab="tab-signups">
+          ✉️ Newsletter Signups
         </button>
       </div>
 
@@ -832,6 +851,48 @@
             
             <div class="crud-list" id="custom-crud-list">
               <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. NEWSLETTER SIGNUPS PANEL -->
+        <div class="tab-content" id="tab-signups">
+          <div class="section-card">
+            <div class="card-title-bar">
+              <h2>Newsletter Signups</h2>
+              <div class="header-actions" style="gap: 8px;">
+                <button class="btn-secondary" id="btn-copy-emails" style="padding: 8px 16px; font-size: 0.85rem;">
+                  📋 Copy All Emails
+                </button>
+                <button class="btn-primary" id="btn-export-csv" style="padding: 8px 16px; font-size: 0.85rem;">
+                  📥 Export to CSV
+                </button>
+              </div>
+            </div>
+            
+            <div style="display: flex; gap: 24px; margin-bottom: 20px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+              <div style="font-size: 0.88rem; color: var(--fg-muted);">
+                Total Subscribers: <strong id="signup-count" style="color: var(--primary)">0</strong>
+              </div>
+              <div style="font-size: 0.85rem; color: var(--fg-light);">
+                Click headers to sort
+              </div>
+            </div>
+
+            <div style="overflow-x: auto; width: 100%; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.01);">
+              <table id="signups-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02);">
+                    <th style="padding: 16px 20px; font-weight: 600; color: var(--primary); cursor: pointer;" id="th-email">Email <span>↕</span></th>
+                    <th style="padding: 16px 20px; font-weight: 600; color: var(--primary); cursor: pointer;" id="th-date">Signed Up At <span>↕</span></th>
+                    <th style="padding: 16px 20px; font-weight: 600; color: var(--primary); cursor: pointer;" id="th-page">Source Page <span>↕</span></th>
+                    <th style="padding: 16px 20px; font-weight: 600; text-align: right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="signups-table-body">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -1054,6 +1115,10 @@
     let portfolioConfig = {};
     let aboutParagraphs = [];
     let currentTags = [];
+    let newsletterSignups = [];
+    let signupsSortField = 'created_at';
+    let signupsSortAsc = false;
+    let realtimeChannel = null;
     
     // Auth Listener on boot
     supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -1114,13 +1179,15 @@
           aboutRes,
           timelineRes,
           venturesRes,
-          customRes
+          customRes,
+          signupsRes
         ] = await Promise.all([
           supabaseClient.from('portfolio_config').select('*'),
           supabaseClient.from('about_paragraphs').select('*').order('sort_order', { ascending: true }),
           supabaseClient.from('timeline_entries').select('*').order('sort_order', { ascending: true }),
           supabaseClient.from('ventures').select('*').order('sort_order', { ascending: true }),
-          supabaseClient.from('custom_sections').select('*').order('sort_order', { ascending: true })
+          supabaseClient.from('custom_sections').select('*').order('sort_order', { ascending: true }),
+          supabaseClient.from('newsletter_signups').select('*').order('created_at', { ascending: false })
         ]);
 
         if (configRes.error) throw configRes.error;
@@ -1128,6 +1195,7 @@
         if (timelineRes.error) throw timelineRes.error;
         if (venturesRes.error) throw venturesRes.error;
         if (customRes.error) throw customRes.error;
+        if (signupsRes.error) throw signupsRes.error;
 
         // Map config table
         portfolioConfig = {};
@@ -1136,6 +1204,7 @@
         });
 
         aboutParagraphs = aboutRes.data;
+        newsletterSignups = signupsRes.data;
 
         // Populate Forms
         populateGlobalForm();
@@ -1143,6 +1212,8 @@
         populateTimelineList(timelineRes.data);
         populateVenturesList(venturesRes.data);
         populateCustomList(customRes.data);
+        populateSignupsList();
+        setupSignupsRealtime();
 
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -1962,6 +2033,199 @@
         showToast('Error deleting: ' + err.message, true);
       }
     }
+
+    // ====================================================================
+    // PANEL F: NEWSLETTER SIGNUPS PANEL
+    // ====================================================================
+    function populateSignupsList() {
+      const tbody = document.getElementById('signups-table-body');
+      const countEl = document.getElementById('signup-count');
+      if (!tbody) return;
+
+      countEl.innerText = newsletterSignups.length;
+
+      // Sort data
+      const sorted = [...newsletterSignups].sort((a, b) => {
+        let valA = a[signupsSortField];
+        let valB = b[signupsSortField];
+        
+        if (signupsSortField === 'created_at') {
+          valA = new Date(valA);
+          valB = new Date(valB);
+        } else {
+          valA = (valA || '').toString().toLowerCase();
+          valB = (valB || '').toString().toLowerCase();
+        }
+
+        if (valA < valB) return signupsSortAsc ? -1 : 1;
+        if (valA > valB) return signupsSortAsc ? 1 : -1;
+        return 0;
+      });
+
+      // Update headers indicator
+      ['email', 'created_at', 'source_page'].forEach(field => {
+        const id = field === 'created_at' ? 'th-date' : (field === 'email' ? 'th-email' : 'th-page');
+        const th = document.getElementById(id);
+        if (th) {
+          const indicator = signupsSortField === field ? (signupsSortAsc ? '▲' : '▼') : '↕';
+          th.querySelector('span').innerText = indicator;
+        }
+      });
+
+      if (sorted.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--fg-muted);">No subscribers yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = sorted.map(sub => {
+        const dateStr = new Date(sub.created_at).toLocaleString();
+        
+        let cleanUrl = sub.source_page;
+        try {
+          const urlObj = new URL(sub.source_page);
+          cleanUrl = urlObj.pathname + urlObj.hash;
+          if (cleanUrl === '/') cleanUrl = 'Home (/)';
+        } catch(e) {}
+
+        return `
+          <tr>
+            <td style="padding: 14px 20px; font-weight: 500;">${escapeHtml(sub.email)}</td>
+            <td style="padding: 14px 20px; color: var(--fg-muted);">${dateStr}</td>
+            <td style="padding: 14px 20px; color: var(--fg-muted); font-family: monospace; font-size: 0.8rem;" title="${escapeHtml(sub.source_page)}">${escapeHtml(cleanUrl)}</td>
+            <td style="padding: 14px 20px; text-align: right;">
+              <button class="btn-danger action-btn" onclick="deleteSignup('${sub.id}')" style="padding: 6px 12px; font-size: 0.75rem;">
+                Delete
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    window.deleteSignup = async function(id) {
+      if (!confirm('Are you sure you want to delete this subscriber?')) return;
+      try {
+        const { error } = await supabaseClient
+          .from('newsletter_signups')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        showToast('Subscriber deleted successfully!');
+        newsletterSignups = newsletterSignups.filter(s => s.id !== id);
+        populateSignupsList();
+      } catch (err) {
+        showToast('Error deleting subscriber: ' + err.message, true);
+      }
+    }
+
+    function setupSignupsSort() {
+      const emailHeader = document.getElementById('th-email');
+      const dateHeader = document.getElementById('th-date');
+      const pageHeader = document.getElementById('th-page');
+
+      if (emailHeader) {
+        emailHeader.addEventListener('click', () => {
+          if (signupsSortField === 'email') {
+            signupsSortAsc = !signupsSortAsc;
+          } else {
+            signupsSortField = 'email';
+            signupsSortAsc = true;
+          }
+          populateSignupsList();
+        });
+      }
+
+      if (dateHeader) {
+        dateHeader.addEventListener('click', () => {
+          if (signupsSortField === 'created_at') {
+            signupsSortAsc = !signupsSortAsc;
+          } else {
+            signupsSortField = 'created_at';
+            signupsSortAsc = false;
+          }
+          populateSignupsList();
+        });
+      }
+
+      if (pageHeader) {
+        pageHeader.addEventListener('click', () => {
+          if (signupsSortField === 'source_page') {
+            signupsSortAsc = !signupsSortAsc;
+          } else {
+            signupsSortField = 'source_page';
+            signupsSortAsc = true;
+          }
+          populateSignupsList();
+        });
+      }
+    }
+
+    function copyAllEmails() {
+      if (newsletterSignups.length === 0) {
+        showToast('No emails to copy.', true);
+        return;
+      }
+      const emails = newsletterSignups.map(s => s.email).join(', ');
+      navigator.clipboard.writeText(emails).then(() => {
+        showToast('Copied ' + newsletterSignups.length + ' emails to clipboard!');
+      }).catch(err => {
+        showToast('Failed to copy to clipboard.', true);
+      });
+    }
+
+    function exportSignupsToCSV() {
+      if (newsletterSignups.length === 0) {
+        showToast('No signups to export.', true);
+        return;
+      }
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Email,Signed Up At,Source Page\n";
+      newsletterSignups.forEach(sub => {
+        const dateStr = new Date(sub.created_at).toISOString();
+        const row = `"${sub.email.replace(/"/g, '""')}","${dateStr}","${sub.source_page.replace(/"/g, '""')}"`;
+        csvContent += row + "\n";
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `newsletter_signups_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Downloaded CSV export!');
+    }
+
+    function setupSignupsRealtime() {
+      if (realtimeChannel) return;
+      realtimeChannel = supabaseClient
+        .channel('admin_signups_realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'newsletter_signups' }, async () => {
+          const { data, error } = await supabaseClient
+            .from('newsletter_signups')
+            .select('*')
+            .order('created_at', { ascending: false });
+          if (!error && data) {
+            newsletterSignups = data;
+            populateSignupsList();
+          }
+        })
+        .subscribe();
+    }
+
+    // Initialize Sort and Button events on boot
+    setupSignupsSort();
+    document.getElementById('btn-copy-emails').addEventListener('click', copyAllEmails);
+    document.getElementById('btn-export-csv').addEventListener('click', exportSignupsToCSV);
   </script>
 </body>
 </html>
