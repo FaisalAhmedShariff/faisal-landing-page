@@ -406,9 +406,70 @@
       text-decoration: none;
       display: inline-block;
     }
-    .blog-nav-link:hover {
-      color: var(--fg);
-      transform: translateY(-1px);
+    /* Typing cursor styling */
+    .typing-cursor::after {
+      content: '|';
+      display: inline-block;
+      color: var(--primary);
+      animation: cursorBlink 0.8s infinite;
+      margin-left: 5px;
+      font-weight: 500;
+    }
+    @keyframes cursorBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* Hero Layout: Overlay version (Toluwani style) */
+    #hero.layout-overlay {
+      padding-top: 140px;
+    }
+    #hero.layout-overlay .hero-photo-wrap {
+      width: clamp(240px, 28vw, 360px);
+      height: clamp(240px, 28vw, 360px);
+      border-radius: 36px;
+      margin-bottom: 0;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    }
+    #hero.layout-overlay .orbit,
+    #hero.layout-overlay .orbit-2 {
+      display: none;
+    }
+    #hero.layout-overlay .photo-star {
+      top: -15px;
+      right: -15px;
+      animation: starSpin 8s ease-in-out infinite;
+    }
+    #hero.layout-overlay .hero-name {
+      position: relative;
+      z-index: 15;
+      margin-top: -50px;
+      font-size: clamp(2rem, 6vw, 4.8rem);
+      text-shadow: 0 4px 12px rgba(0,0,0,0.6);
+      margin-bottom: 8px;
+    }
+    #hero.layout-overlay .hero-name .outline-part {
+      -webkit-text-stroke: 1.5px var(--fg);
+      text-stroke: 1.5px var(--fg);
+    }
+    #hero.layout-overlay .hero-greeting {
+      position: relative;
+      z-index: 15;
+      font-size: clamp(0.9rem, 1.8vw, 1.1rem);
+      color: var(--primary);
+      font-weight: 500;
+      max-width: 600px;
+      margin-bottom: 28px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    #hero.layout-overlay .hero-cta {
+      position: relative;
+      z-index: 15;
+    }
+    #hero.layout-overlay .hero-social-pill {
+      position: relative;
+      z-index: 15;
+      margin-bottom: 24px;
     }
 
     /* Essentials strip */
@@ -1175,6 +1236,8 @@
     const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
     let dataLoaded = false;
+    let heroSolidName = "Faisal";
+    let heroOutlineName = "Ahmed Shariff";
 
     // Helper: Map social platform names to SVGs (filled vs stroke)
     function getSocialSvg(platform, filled = false) {
@@ -1246,11 +1309,28 @@
 
         // 1. Render Hero Name, Greeting, and Photo
         if (config.hero_name_solid || config.hero_name_outline) {
-          const solid = config.hero_name_solid || '';
-          const outline = config.hero_name_outline || '';
-          document.getElementById('hero-name').innerHTML = `${solid} <span class="outline-part">${outline}</span>.`;
-          document.title = `${solid} ${outline} | Founder & Builder`;
+          heroSolidName = config.hero_name_solid || '';
+          heroOutlineName = config.hero_name_outline || '';
+          document.title = `${heroSolidName} ${heroOutlineName} | Founder & Builder`;
+          
+          // If already loaded, trigger typing animation immediately (for realtime update feedback)
+          if (document.body.classList.contains('loaded')) {
+            startTypeNameAnimation(heroSolidName, heroOutlineName);
+          } else {
+            document.getElementById('hero-name').innerHTML = ""; // keep empty for loader sync
+          }
         }
+
+        // Apply Hero Layout Style
+        const heroEl = document.getElementById('hero');
+        if (heroEl) {
+          if (config.hero_layout === 'overlay') {
+            heroEl.classList.add('layout-overlay');
+          } else {
+            heroEl.classList.remove('layout-overlay');
+          }
+        }
+
         if (config.hero_greeting) {
           document.getElementById('hero-greeting').innerHTML = config.hero_greeting;
         }
@@ -1521,6 +1601,9 @@
           setTimeout(() => {
             loaderEl.classList.add('hide');
             document.body.classList.add('loaded');
+            setTimeout(() => {
+              startTypeNameAnimation(heroSolidName, heroOutlineName);
+            }, 400);
           }, 280);
         }
       }, 17);
@@ -1681,6 +1764,48 @@
         headerEl.classList.remove('scrolled');
       }
     });
+
+    // Typewriter Typing Animation for Hero Name
+    let typingTimer = null;
+    function startTypeNameAnimation(solidText, outlineText) {
+      const heroNameEl = document.getElementById('hero-name');
+      if (!heroNameEl) return;
+      
+      // Cancel previous typing timer if running
+      if (typingTimer) {
+        clearInterval(typingTimer);
+      }
+      
+      heroNameEl.innerHTML = "";
+      heroNameEl.classList.add('typing-cursor');
+      
+      let charIndex = 0;
+      const totalLen = solidText.length + outlineText.length + 1; // +1 for final dot
+      
+      typingTimer = setInterval(() => {
+        if (charIndex <= solidText.length) {
+          // Solid name typing
+          const typedSolid = solidText.slice(0, charIndex);
+          heroNameEl.innerHTML = typedSolid;
+        } else if (charIndex <= solidText.length + outlineText.length) {
+          // Outline name typing
+          const outlineIndex = charIndex - solidText.length;
+          const typedOutline = outlineText.slice(0, outlineIndex);
+          heroNameEl.innerHTML = `${solidText} <span class="outline-part">${typedOutline}</span>`;
+        } else {
+          // Final dot typed
+          heroNameEl.innerHTML = `${solidText} <span class="outline-part">${outlineText}</span>.`;
+          clearInterval(typingTimer);
+          typingTimer = null;
+          
+          // Fade out the typing cursor
+          setTimeout(() => {
+            heroNameEl.classList.remove('typing-cursor');
+          }, 1200);
+        }
+        charIndex++;
+      }, 65 + Math.random() * 30);
+    }
   </script>
 </body>
 </html>

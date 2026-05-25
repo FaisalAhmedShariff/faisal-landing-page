@@ -717,6 +717,13 @@
                   <input type="text" id="cfg-hero-name-outline" placeholder="Ahmed Shariff">
                 </div>
                 <div class="form-group span-full">
+                  <label class="form-label">Hero Layout Style</label>
+                  <select id="cfg-hero-layout" required>
+                    <option value="classic">Classic (Circular Photo, Name Below)</option>
+                    <option value="overlay">Overlay (Rounded Square Photo, Name Overlapping)</option>
+                  </select>
+                </div>
+                <div class="form-group span-full">
                   <label class="form-label">Hero Greeting / Intro text (HTML allowed)</label>
                   <textarea id="cfg-hero-greeting" rows="3" placeholder="I've gotten your attention..."></textarea>
                 </div>
@@ -1374,6 +1381,7 @@
       document.getElementById('cfg-hero-name-outline').value = portfolioConfig.hero_name_outline || '';
       document.getElementById('cfg-hero-greeting').value = portfolioConfig.hero_greeting || '';
       document.getElementById('img-hero-preview').src = portfolioConfig.hero_photo_url || '';
+      document.getElementById('cfg-hero-layout').value = portfolioConfig.hero_layout || 'classic';
       
       // Global
       document.getElementById('cfg-updates-title').value = portfolioConfig.updates_title || '';
@@ -1436,6 +1444,7 @@
       const outline = document.getElementById('cfg-hero-name-outline').value;
       const greeting = document.getElementById('cfg-hero-greeting').value;
       const fileInput = document.getElementById('file-hero-photo');
+      const layout = document.getElementById('cfg-hero-layout').value;
 
       try {
         let photoUrl = portfolioConfig.hero_photo_url;
@@ -1455,7 +1464,8 @@
           { key: 'hero_name_solid', value: solid },
           { key: 'hero_name_outline', value: outline },
           { key: 'hero_greeting', value: greeting },
-          { key: 'hero_photo_url', value: photoUrl }
+          { key: 'hero_photo_url', value: photoUrl },
+          { key: 'hero_layout', value: layout }
         ];
 
         // Save each configurations row
