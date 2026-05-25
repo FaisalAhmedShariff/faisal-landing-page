@@ -13,6 +13,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <style>
     /* ====================================================================
        THEME & VARIABLES (Dark Mode Glassmorphic Aesthetic)
@@ -598,6 +600,12 @@
     #signups-table tr:hover {
       background: rgba(255, 255, 255, 0.01);
     }
+
+    /* Circular Cropper Mask */
+    .cropper-view-box,
+    .cropper-face {
+      border-radius: 50%;
+    }
   </style>
 </head>
 <body>
@@ -1172,6 +1180,26 @@
     </div>
   </div>
 
+  <!-- E. Image Crop Modal -->
+  <div class="modal-overlay" id="modal-crop">
+    <div class="modal-card" style="max-width: 500px;">
+      <div class="card-title-bar">
+        <h3>Crop Profile Picture</h3>
+        <button class="btn-secondary" type="button" onclick="cancelCrop()" style="padding: 6px 12px; font-size: 0.8rem;">×</button>
+      </div>
+      <div style="margin-bottom: 20px; font-size: 0.85rem; color: var(--fg-muted)">
+        Drag, zoom, and adjust the selection box to frame your profile picture.
+      </div>
+      <div style="width: 100%; height: 320px; background: #000; border-radius: 8px; overflow: hidden; margin-bottom: 20px;">
+        <img id="crop-image" src="" alt="Image to crop" style="max-width: 100%; display: block; height: 100%; margin: 0 auto;">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 12px;">
+        <button type="button" class="btn-secondary" onclick="cancelCrop()">Cancel</button>
+        <button type="button" class="btn-primary" onclick="confirmCrop()">Confirm Crop</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Global status alert banner -->
   <div id="global-status-toast" style="position: fixed; bottom: 24px; right: 24px; background: rgba(8, 12, 16, 0.95); border: 1px solid var(--primary); padding: 16px 24px; border-radius: 8px; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: none; align-items: center; gap: 12px; font-weight: 500;">
     <span style="color: var(--primary)">●</span>
@@ -1412,13 +1440,15 @@
       try {
         let photoUrl = portfolioConfig.hero_photo_url;
         
-        // If image uploaded
-        if (fileInput.files.length > 0) {
+        // If cropped image exists
+        if (croppedHeroBlob) {
           const file = fileInput.files[0];
-          const path = `avatars/avatar_${Date.now()}.${file.name.split('.').pop()}`;
+          const ext = file ? file.name.split('.').pop() : 'jpg';
+          const path = `avatars/avatar_${Date.now()}.${ext}`;
           showToast('Uploading profile image...');
-          photoUrl = await uploadAsset(file, path);
+          photoUrl = await uploadAsset(croppedHeroBlob, path);
           document.getElementById('img-hero-preview').src = photoUrl;
+          croppedHeroBlob = null; // reset
         }
 
         const updates = [
@@ -2481,6 +2511,92 @@
         showToast('Error saving blog post: ' + err.message, true);
       }
     });
+
+    // ====================================================================
+    // PANEL H: INTERACTIVE CROPPER LOGIC
+    // ====================================================================
+    let cropper = null;
+    let croppedHeroBlob = null;
+
+    document.getElementById('file-hero-photo').addEventListener('change', function(e) {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        if (!file.type.startsWith('image/')) {
+          showToast('Please select a valid image file.', true);
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const imageEl = document.getElementById('crop-image');
+          imageEl.src = event.target.result;
+          
+          openModal('modal-crop');
+          
+          // Initialize cropper after modal opens and image is loaded
+          if (cropper) {
+            cropper.destroy();
+          }
+          
+          // Small timeout to allow container element sizing inside modal
+          setTimeout(() => {
+            cropper = new Cropper(imageEl, {
+              aspectRatio: 1,
+              viewMode: 1,
+              dragMode: 'move',
+              autoCropArea: 0.8,
+              responsive: true,
+              checkOrientation: false,
+              background: false,
+              modal: true,
+              guides: false,
+              center: true,
+              highlight: false,
+              cropBoxMovable: true,
+              cropBoxResizable: true,
+              toggleDragModeOnDblclick: false
+            });
+          }, 150);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    window.confirmCrop = function() {
+      if (!cropper) return;
+      
+      const canvas = cropper.getCroppedCanvas({
+        width: 400,
+        height: 400,
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high'
+      });
+      
+      canvas.toBlob(function(blob) {
+        croppedHeroBlob = blob;
+        
+        // Show preview of cropped image
+        const localUrl = URL.createObjectURL(blob);
+        document.getElementById('img-hero-preview').src = localUrl;
+        
+        closeModal('modal-crop');
+        if (cropper) {
+          cropper.destroy();
+          cropper = null;
+        }
+        showToast('Image cropped successfully! Click "Save Hero Section" to save.');
+      }, 'image/jpeg', 0.9);
+    };
+
+    window.cancelCrop = function() {
+      document.getElementById('file-hero-photo').value = '';
+      closeModal('modal-crop');
+      if (cropper) {
+        cropper.destroy();
+        cropper = null;
+      }
+    };
   </script>
 </body>
 </html>
