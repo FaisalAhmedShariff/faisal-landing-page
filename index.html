@@ -406,18 +406,24 @@
       text-decoration: none;
       display: inline-block;
     }
-    /* Typing cursor styling */
-    .typing-cursor::after {
-      content: '|';
+    /* Name Reveal Animation (GSAP-like Staggered Slide, Rotate & Blur) */
+    .name-word {
       display: inline-block;
-      color: var(--primary);
-      animation: cursorBlink 0.8s infinite;
-      margin-left: 5px;
-      font-weight: 500;
+      white-space: nowrap;
     }
-    @keyframes cursorBlink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
+    .reveal-char {
+      display: inline-block;
+      transform: translateY(60px) rotate(8deg);
+      opacity: 0;
+      filter: blur(6px);
+      transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), 
+                  opacity 1s cubic-bezier(0.16, 1, 0.3, 1), 
+                  filter 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal-active .reveal-char {
+      transform: translateY(0) rotate(0deg);
+      opacity: 1;
+      filter: blur(0px);
     }
 
     /* Hero Layout: Overlay version (Toluwani style) */
@@ -1315,7 +1321,7 @@
           
           // If already loaded, trigger typing animation immediately (for realtime update feedback)
           if (document.body.classList.contains('loaded')) {
-            startTypeNameAnimation(heroSolidName, heroOutlineName);
+            startNameRevealAnimation(heroSolidName, heroOutlineName);
           } else {
             document.getElementById('hero-name').innerHTML = ""; // keep empty for loader sync
           }
@@ -1602,7 +1608,7 @@
             loaderEl.classList.add('hide');
             document.body.classList.add('loaded');
             setTimeout(() => {
-              startTypeNameAnimation(heroSolidName, heroOutlineName);
+              startNameRevealAnimation(heroSolidName, heroOutlineName);
             }, 400);
           }, 280);
         }
@@ -1765,46 +1771,57 @@
       }
     });
 
-    // Typewriter Typing Animation for Hero Name
-    let typingTimer = null;
-    function startTypeNameAnimation(solidText, outlineText) {
+    // GSAP-like Staggered Word & Letter Reveal Animation
+    function startNameRevealAnimation(solidText, outlineText) {
       const heroNameEl = document.getElementById('hero-name');
       if (!heroNameEl) return;
-      
-      // Cancel previous typing timer if running
-      if (typingTimer) {
-        clearInterval(typingTimer);
-      }
-      
+
+      heroNameEl.classList.remove('reveal-active');
       heroNameEl.innerHTML = "";
-      heroNameEl.classList.add('typing-cursor');
-      
-      let charIndex = 0;
-      const totalLen = solidText.length + outlineText.length + 1; // +1 for final dot
-      
-      typingTimer = setInterval(() => {
-        if (charIndex <= solidText.length) {
-          // Solid name typing
-          const typedSolid = solidText.slice(0, charIndex);
-          heroNameEl.innerHTML = typedSolid;
-        } else if (charIndex <= solidText.length + outlineText.length) {
-          // Outline name typing
-          const outlineIndex = charIndex - solidText.length;
-          const typedOutline = outlineText.slice(0, outlineIndex);
-          heroNameEl.innerHTML = `${solidText} <span class="outline-part">${typedOutline}</span>`;
+
+      let html = '';
+      let delay = 0;
+      const delayStep = 0.035; // 35ms stagger delay per letter
+
+      // 1. Process Solid Name
+      html += '<span class="name-word">';
+      for (let i = 0; i < solidText.length; i++) {
+        const char = solidText[i];
+        if (char === ' ') {
+          html += '</span> <span class="name-word">';
         } else {
-          // Final dot typed
-          heroNameEl.innerHTML = `${solidText} <span class="outline-part">${outlineText}</span>.`;
-          clearInterval(typingTimer);
-          typingTimer = null;
-          
-          // Fade out the typing cursor
-          setTimeout(() => {
-            heroNameEl.classList.remove('typing-cursor');
-          }, 1200);
+          html += `<span class="reveal-char" style="transition-delay: ${delay}s">${char}</span>`;
+          delay += delayStep;
         }
-        charIndex++;
-      }, 65 + Math.random() * 30);
+      }
+      html += '</span>';
+
+      html += ' '; // Word space separator
+
+      // 2. Process Outline Name
+      html += '<span class="name-word outline-part">';
+      for (let i = 0; i < outlineText.length; i++) {
+        const char = outlineText[i];
+        if (char === ' ') {
+          html += '</span> <span class="name-word outline-part">';
+        } else {
+          html += `<span class="reveal-char" style="transition-delay: ${delay}s">${char}</span>`;
+          delay += delayStep;
+        }
+      }
+      html += '</span>';
+
+      // 3. Process Final Dot
+      html += `<span class="reveal-char dot" style="transition-delay: ${delay}s">.</span>`;
+
+      heroNameEl.innerHTML = html;
+
+      // Force render layout reflow to trigger transition
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          heroNameEl.classList.add('reveal-active');
+        }, 30);
+      });
     }
   </script>
 </body>
