@@ -883,7 +883,7 @@
             fill="var(--primary)" fill-opacity="0.75" stroke="var(--primary)" stroke-width="0.5"/>
         </svg>
       </span>
-      <img src="assets/My picture.jpeg" alt="Faisal Ahmed Shariff — Founder" id="hero-photo-img" />
+      <img src="assets/My picture.jpeg" alt="Faisal Ahmed Shariff — Founder" id="hero-photo-img" fetchpriority="high" />
     </div>
 
     <h1 class="hero-name" id="hero-name">Faisal <span class="outline-part">Ahmed Shariff</span>.</h1>
@@ -1083,7 +1083,7 @@
 
         <a target="_blank" href="https://zivoautomations.com" class="card">
           <div class="card-img" style="background:#000;padding:0;overflow:hidden">
-            <img src="assets/zivo logo.jpeg" alt="ZIVO Automations logo" style="width:100%;height:100%;object-fit:cover;display:block;"/>
+            <img src="assets/zivo logo.jpeg" alt="ZIVO Automations logo" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" />
           </div>
           <h3 class="card-title">ZIVO — AI-Driven CRM Platform</h3>
           <p class="card-meta">zivoautomations.com · 2026</p>
@@ -1383,7 +1383,7 @@
           const venturesHtml = venturesRes.data.map(v => {
             const innerContent = `
               <div class="card-img" style="${v.logo_url ? 'background:#000;padding:0;overflow:hidden' : getVenturePlaceholderStyle(v.name).bg}">
-                ${v.logo_url ? `<img src="${v.logo_url}" alt="${v.name} logo" style="width:100%;height:100%;object-fit:cover;display:block;"/>` : getVenturePlaceholderStyle(v.name).html}
+                ${v.logo_url ? `<img src="${v.logo_url}" alt="${v.name} logo" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy"/>` : getVenturePlaceholderStyle(v.name).html}
               </div>
               <h3 class="card-title">${v.name}</h3>
               <p class="card-meta">${v.website_url ? v.website_url.replace(/^https?:\/\/(www\.)?/, '') + ' · ' : ''}${v.year}</p>
@@ -1437,7 +1437,7 @@
                 content.cards.forEach(c => {
                   innerHtml += `
                   <div class="card reveal" style="width:100%;height:auto;min-height:220px;justify-content:flex-start;">
-                    ${c.image_url ? `<div class="card-img" style="background:#000;padding:0;overflow:hidden;height:140px;margin-bottom:16px;"><img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;"/></div>` : ''}
+                    ${c.image_url ? `<div class="card-img" style="background:#000;padding:0;overflow:hidden;height:140px;margin-bottom:16px;"><img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;" loading="lazy"/></div>` : ''}
                     <h3 class="card-title" style="text-align:left;margin-bottom:10px;font-size:1.2rem;">${c.title}</h3>
                     <p style="font-size:0.9rem;color:var(--fg-muted);line-height:1.6;margin-bottom:12px;">${c.description}</p>
                     ${c.link_url ? `<a href="${c.link_url}" target="_blank" style="font-size:0.85rem;color:var(--primary);font-weight:600;margin-top:auto;">${c.link_text || 'Learn more ↗'}</a>` : ''}
@@ -1451,7 +1451,7 @@
                 content.images.forEach(img => {
                   innerHtml += `
                   <div class="reveal" style="border-radius:12px;overflow:hidden;border:1px solid var(--border);position:relative;aspect-ratio:4/3;">
-                    <img src="${img.url}" alt="${img.caption || ''}" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"/>
+                    <img src="${img.url}" alt="${img.caption || ''}" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" loading="lazy"/>
                     ${img.caption ? `<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent, rgba(0,0,0,0.8));padding:12px;color:#fff;font-size:0.85rem;">${img.caption}</div>` : ''}
                   </div>`;
                 });
