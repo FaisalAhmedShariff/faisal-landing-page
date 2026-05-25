@@ -1136,6 +1136,9 @@
     supabaseClient.auth.onAuthStateChange((event, session) => {
       if (session) {
         sessionUser = session.user;
+        if (sessionUser.email === 'faashariff2829@gmail.com') {
+          localStorage.setItem('faisal_admin_mode', 'true');
+        }
         document.getElementById('user-email-display').innerText = sessionUser.email;
         document.getElementById('login-container').style.display = 'none';
         document.getElementById('dashboard-container').style.display = 'flex';
@@ -1144,6 +1147,7 @@
         loadAllDashboardData();
       } else {
         sessionUser = null;
+        localStorage.removeItem('faisal_admin_mode');
         document.getElementById('login-container').style.display = 'flex';
         document.getElementById('dashboard-container').style.display = 'none';
       }
@@ -1169,6 +1173,7 @@
     });
 
     document.getElementById('logout-btn').addEventListener('click', async () => {
+      localStorage.removeItem('faisal_admin_mode');
       await supabaseClient.auth.signOut();
     });
 

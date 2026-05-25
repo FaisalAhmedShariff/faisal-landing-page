@@ -1627,6 +1627,16 @@
     // Visitor session unique tracking
     (async function trackVisitor() {
       try {
+        // Skip tracking if administrator is visiting
+        if (localStorage.getItem('faisal_admin_mode') === 'true') {
+          return;
+        }
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session && session.user && session.user.email === 'faashariff2829@gmail.com') {
+          localStorage.setItem('faisal_admin_mode', 'true');
+          return;
+        }
+
         if (!sessionStorage.getItem('faisal_portfolio_session')) {
           const sessionKey = 'session_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now();
           sessionStorage.setItem('faisal_portfolio_session', sessionKey);
