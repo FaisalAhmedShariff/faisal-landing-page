@@ -18,7 +18,8 @@ insert into public.portfolio_config (key, value) values
   {"platform": "instagram", "url": "https://www.instagram.com/fa_is_al_2829?igsh=OHc5MmZ3eXpncm4=", "label": "Instagram"},
   {"platform": "github", "url": "https://github.com/FaisalAhmedShariff", "label": "GitHub"},
   {"platform": "email", "url": "mailto:faashariff2829@gmail.com", "label": "Email"}
-]')
+]'),
+('hero_layout', '"classic"')
 on conflict (key) do update set value = excluded.value;
 
 -- 2. Insert About Bio Paragraphs
