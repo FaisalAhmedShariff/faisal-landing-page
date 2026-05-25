@@ -406,24 +406,30 @@
       text-decoration: none;
       display: inline-block;
     }
-    /* Name Reveal Animation (GSAP-like Staggered Slide, Rotate & Blur) */
-    .name-word {
-      display: inline-block;
-      white-space: nowrap;
+    /* Premium Cinematic Word Reveal Animation */
+    .hero-name {
+      display: inline-flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0 16px;
     }
-    .reveal-char {
+    .word-reveal {
       display: inline-block;
-      transform: translateY(60px) rotate(8deg);
       opacity: 0;
-      filter: blur(6px);
-      transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), 
-                  opacity 1s cubic-bezier(0.16, 1, 0.3, 1), 
-                  filter 1s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform 1.3s cubic-bezier(0.16, 1, 0.3, 1), 
+                  opacity 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform, opacity;
     }
-    .reveal-active .reveal-char {
-      transform: translateY(0) rotate(0deg);
+    .word-reveal.anim-left {
+      transform: translateX(-40px);
+    }
+    .word-reveal.anim-up {
+      transform: translateY(30px);
+    }
+    .reveal-active .word-reveal.anim-left,
+    .reveal-active .word-reveal.anim-up {
+      transform: translate(0, 0);
       opacity: 1;
-      filter: blur(0px);
     }
 
     /* Hero Layout: Overlay version (Toluwani style) */
@@ -1771,7 +1777,7 @@
       }
     });
 
-    // GSAP-like Staggered Word & Letter Reveal Animation
+    // Cinematic Word-by-Word Staggered Reveal Animation
     function startNameRevealAnimation(solidText, outlineText) {
       const heroNameEl = document.getElementById('hero-name');
       if (!heroNameEl) return;
@@ -1780,39 +1786,23 @@
       heroNameEl.innerHTML = "";
 
       let html = '';
-      let delay = 0;
-      const delayStep = 0.035; // 35ms stagger delay per letter
+      
+      // 1. Solid Part (Faisal): slides in from left, delay 0s
+      html += `<span class="word-reveal anim-left" style="transition-delay: 0s">${solidText}</span>`;
 
-      // 1. Process Solid Name
-      html += '<span class="name-word">';
-      for (let i = 0; i < solidText.length; i++) {
-        const char = solidText[i];
-        if (char === ' ') {
-          html += '</span> <span class="name-word">';
-        } else {
-          html += `<span class="reveal-char" style="transition-delay: ${delay}s">${char}</span>`;
-          delay += delayStep;
-        }
-      }
-      html += '</span>';
-
-      html += ' '; // Word space separator
-
-      // 2. Process Outline Name
-      html += '<span class="name-word outline-part">';
-      for (let i = 0; i < outlineText.length; i++) {
-        const char = outlineText[i];
-        if (char === ' ') {
-          html += '</span> <span class="name-word outline-part">';
-        } else {
-          html += `<span class="reveal-char" style="transition-delay: ${delay}s">${char}</span>`;
-          delay += delayStep;
-        }
-      }
-      html += '</span>';
-
-      // 3. Process Final Dot
-      html += `<span class="reveal-char dot" style="transition-delay: ${delay}s">.</span>`;
+      // 2. Outline Part (Ahmed Shariff): slides up from bottom, staggered delays
+      const outlineWords = outlineText.trim().split(/\s+/);
+      
+      outlineWords.forEach((word, idx) => {
+        // First outline word (Ahmed) delay 0.38s, second (Shariff) delay 0.7s, etc.
+        const delay = 0.38 + idx * 0.32;
+        
+        // Add dot to the very last outline word
+        const isLast = idx === outlineWords.length - 1;
+        const wordText = isLast ? `${word}.` : word;
+        
+        html += `<span class="word-reveal anim-up outline-part" style="transition-delay: ${delay}s">${wordText}</span>`;
+      });
 
       heroNameEl.innerHTML = html;
 
