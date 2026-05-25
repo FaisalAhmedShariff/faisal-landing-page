@@ -679,6 +679,18 @@
 
         <!-- 1. GLOBAL & HERO PANEL -->
         <div class="tab-content active" id="tab-global">
+          
+          <!-- Visitor Stats Card -->
+          <div class="section-card" style="background: linear-gradient(135deg, rgba(74, 240, 196, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%); border-color: rgba(74, 240, 196, 0.15); margin-bottom: 24px; padding: 24px 32px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <h3 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-muted); margin-bottom: 6px;">Total Unique Visitors</h3>
+                <div style="font-size: 2.2rem; font-weight: 800; font-family: 'Syne', sans-serif; color: var(--primary); line-height: 1;" id="stats-total-visitors">0</div>
+              </div>
+              <div style="font-size: 2rem; opacity: 0.8; user-select: none;">👥</div>
+            </div>
+          </div>
+
           <div class="section-card">
             <div class="card-title-bar">
               <h2>Hero Branding</h2>
@@ -1180,14 +1192,16 @@
           timelineRes,
           venturesRes,
           customRes,
-          signupsRes
+          signupsRes,
+          viewsRes
         ] = await Promise.all([
           supabaseClient.from('portfolio_config').select('*'),
           supabaseClient.from('about_paragraphs').select('*').order('sort_order', { ascending: true }),
           supabaseClient.from('timeline_entries').select('*').order('sort_order', { ascending: true }),
           supabaseClient.from('ventures').select('*').order('sort_order', { ascending: true }),
           supabaseClient.from('custom_sections').select('*').order('sort_order', { ascending: true }),
-          supabaseClient.from('newsletter_signups').select('*').order('created_at', { ascending: false })
+          supabaseClient.from('newsletter_signups').select('*').order('created_at', { ascending: false }),
+          supabaseClient.from('page_views').select('*', { count: 'exact', head: true })
         ]);
 
         if (configRes.error) throw configRes.error;
@@ -1196,6 +1210,7 @@
         if (venturesRes.error) throw venturesRes.error;
         if (customRes.error) throw customRes.error;
         if (signupsRes.error) throw signupsRes.error;
+        if (viewsRes.error) throw viewsRes.error;
 
         // Map config table
         portfolioConfig = {};
@@ -1205,6 +1220,9 @@
 
         aboutParagraphs = aboutRes.data;
         newsletterSignups = signupsRes.data;
+
+        // Populate Stats
+        document.getElementById('stats-total-visitors').innerText = viewsRes.count || 0;
 
         // Populate Forms
         populateGlobalForm();
@@ -2217,6 +2235,14 @@
           if (!error && data) {
             newsletterSignups = data;
             populateSignupsList();
+          }
+        })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'page_views' }, async () => {
+          const { count, error } = await supabaseClient
+            .from('page_views')
+            .select('*', { count: 'exact', head: true });
+          if (!error && count !== null) {
+            document.getElementById('stats-total-visitors').innerText = count;
           }
         })
         .subscribe();

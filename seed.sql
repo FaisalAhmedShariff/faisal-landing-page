@@ -77,4 +77,17 @@ commit;
 --   alter publication supabase_realtime add table public.newsletter_signups;
 -- commit;
 
+-- 7. Page Views Visitor Tracker Table (Run in SQL Editor to create)
+-- create table if not exists public.page_views (
+--   id uuid default uuid_generate_v4() primary key,
+--   source_page text not null,
+--   created_at timestamp with time zone default timezone('utc'::text, now()) not null
+-- );
+-- alter table public.page_views enable row level security;
+-- create policy "Allow public insert on page_views" on public.page_views for insert with check (true);
+-- create policy "Allow admin read/write on page_views" on public.page_views for all using (auth.role() = 'authenticated');
+-- begin;
+--   alter publication supabase_realtime add table public.page_views;
+-- commit;
+
 
