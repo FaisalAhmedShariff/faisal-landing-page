@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blog | Faisal Ahmed Shariff</title>
+  <meta name="description" content="Thoughts, building progress, and engineering logs from Faisal Ahmed Shariff." />
+  
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon_io/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon_io/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon_io/favicon-16x16.png">
+  <link rel="manifest" href="../assets/favicon_io/site.webmanifest">
+  <link rel="shortcut icon" href="../assets/favicon_io/favicon.ico">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* ====================================================================
+       TOKENS — DARK (default)
+    ==================================================================== */
+    :root {
+      --bg: #080c10;
+      --fg: rgba(255, 255, 255, 0.95);
+      --fg-muted: rgba(255, 255, 255, 0.85);
+      --fg-light: rgba(255, 255, 255, 0.6);
+      --border: rgba(255, 255, 255, 0.12);
+      --card-bg: rgba(255, 255, 255, 0.04);
+      --primary: #4af0c4;
+      --primary-dim: rgba(74,240,196,0.13);
+      --photo-shadow: 0 0 0 3px rgba(74,240,196,0.22), 0 28px 80px rgba(0,0,0,0.75);
+      --card-shadow: 0 20px 64px rgba(0,0,0,0.55);
+      --toggle-bg: rgba(255, 255, 255, 0.06);
+      --toggle-border: rgba(255, 255, 255, 0.12);
+      --btn-text: #080c10;
+    }
+    html.light {
+      --bg: transparent;           /* gradient handles it */
+      --fg: #0a0e14;
+      --fg-muted: rgba(10, 14, 20, 0.75);
+      --fg-light: rgba(10, 14, 20, 0.52);
+      --border: rgba(10, 14, 20, 0.12);
+      --card-bg: #ffffff;
+      --primary: #0059d1;
+      --primary-dim: rgba(0,89,209,0.10);
+      --photo-shadow: 0 0 0 3px rgba(0,89,209,0.18), 0 28px 64px rgba(0,0,0,0.14);
+      --card-shadow: 0 8px 40px rgba(0,0,0,0.09);
+      --toggle-bg: rgba(255, 255, 255, 0.55);
+      --toggle-border: rgba(10,14,20,0.12);
+      --btn-text: #ffffff;
+    }
+
+    /* ====================================================================
+       RESET & BASE
+    ==================================================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #080c10;
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: color 0.4s;
+    }
+
+    /* Light body uses a full-page gradient */
+    html.light body {
+      background: linear-gradient(
+        135deg,
+        #b8f0e8 0%,
+        #a0d4f5 22%,
+        #b8c8f8 48%,
+        #d4b0f0 72%,
+        #f0b8d8 100%
+      );
+      background-attachment: fixed;
+    }
+    html.light body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background: rgba(255,255,255,0.18);
+      pointer-events: none;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+    button { cursor: pointer; font-family: inherit; background: none; border: none; color: inherit; }
+    ::selection { background: var(--primary); color: #000; }
+
+    /* ====================================================================
+       LOADER
+    ==================================================================== */
+    #loader {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #080c10;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.7s ease;
+    }
+    #loader.hide { opacity: 0; pointer-events: none; }
+    .loader-count {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(80px, 18vw, 240px);
+      font-weight: 800; color: #f0f4f8; line-height: 1;
+    }
+    .loader-pct { font-size: 0.34em; vertical-align: super; opacity: 0.38; margin-left: 0.06em; }
+
+    /* ====================================================================
+       ANIMATED BLOB BAND — dark mode: scrolls right → left
+    ==================================================================== */
+    .blob-band {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none; overflow: hidden;
+    }
+    .blob-band svg {
+      position: absolute; top: -30%; left: 0;
+      width: 260vw; height: 160%;
+      opacity: 0;
+      animation: bandSlide 52s linear infinite;
+      transition: opacity 0.6s;
+    }
+    body.loaded .blob-band svg { opacity: 1; }
+    html.light .blob-band svg  { opacity: 0 !important; }
+    @keyframes bandSlide {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    .grain {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.032;
+    }
+    html.light .grain { opacity: 0.016; }
+
+    .grid-lines {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    }
+    .grid-lines svg { width: 100%; height: 100%; }
+
+    /* ====================================================================
+       HEADER
+    ==================================================================== */
+    header {
+      position: fixed; top: 0; left: 0; width: 100%;
+      z-index: 200;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 22px 40px;
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      backdrop-filter: blur(0px);
+      -webkit-backdrop-filter: blur(0px);
+      transition: background 0.3s, padding 0.3s, border-color 0.3s, backdrop-filter 0.3s;
+    }
+    header.scrolled {
+      padding: 8px 40px;
+      background: rgba(0, 0, 0, 0.12);
+      border-bottom: none;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    html.light header.scrolled {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 11px;
+      justify-self: start;
+    }
+    .logo-box {
+      width: 36px; height: 36px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.25s;
+    }
+    .logo-box:hover { border-color: var(--primary); }
+    .logo-box svg { width: 16px; height: 16px; stroke: var(--fg); }
+    .logo-name {
+      font-size: 1.05rem; font-weight: 600;
+      letter-spacing: -0.01em; color: var(--fg);
+    }
+
+    .header-socials {
+      display: flex; gap: 18px; align-items: center;
+      justify-self: center;
+    }
+    .header-socials a {
+      color: var(--fg-muted);
+      transition: color 0.2s, transform 0.2s;
+      display: flex; align-items: center;
+    }
+    .header-socials a:hover { color: var(--fg); transform: translateY(-2px); }
+    .header-socials svg { width: 18px; height: 18px; }
+
+    .hamburger {
+      width: 40px; height: 40px;
+      border: 1.5px solid var(--border);
+      border-radius: 50%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+      transition: border-color 0.22s, transform 0.22s;
+    }
+    .hamburger:hover { border-color: var(--primary); transform: scale(1.05); }
+    .hamburger span {
+      display: block; width: 16px; height: 1.8px;
+      background: var(--fg); transition: transform 0.22s, width 0.22s;
+    }
+
+    .blog-nav-link {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--fg-muted);
+      transition: color 0.2s, transform 0.2s;
+      text-transform: lowercase;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .blog-nav-link:hover {
+      color: var(--fg);
+      transform: translateY(-1px);
+    }
+
+    /* ====================================================================
+       MOBILE NAV MENU
+    ==================================================================== */
+    #mobile-menu {
+      position: fixed; inset: 0; z-index: 500;
+      background: #080c10;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 24px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #mobile-menu.open { opacity: 1; pointer-events: auto; }
+    .mobile-nav-link {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.2rem; color: rgba(255,255,255,0.7);
+      transition: color 0.22s, transform 0.22s;
+    }
+    .mobile-nav-link:hover { color: #fff; transform: scale(1.04); }
+    .menu-close {
+      position: absolute; top: 22px; right: 28px;
+      font-size: 2.5rem; color: rgba(255,255,255,0.6);
+      width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+    }
+    .menu-close:hover { color: #fff; }
+
+    /* ====================================================================
+       FLOATING CONTROLS
+    ==================================================================== */
+    #theme-toggle {
+      position: fixed; bottom: 28px; left: 28px; z-index: 150;
+      width: 50px; height: 50px; border-radius: 50%;
+      background: var(--toggle-bg);
+      border: 1px solid var(--toggle-border);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--fg-muted);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transition: border-color 0.22s, color 0.22s, transform 0.22s, background 0.4s;
+    }
+    #theme-toggle:hover {
+      border-color: var(--primary); color: var(--primary); transform: scale(1.1);
+    }
+    #theme-toggle svg { width: 17px; height: 17px; }
+
+    /* ====================================================================
+       BLOG LAYOUT & SECTIONS
+    ==================================================================== */
+    section { position: relative; z-index: 10; padding: 120px 40px 90px; }
+    
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.4rem, 6vw, 4.4rem); font-weight: 400;
+      text-align: center; margin-bottom: 56px;
+      letter-spacing: -0.02em; color: var(--fg);
+    }
+
+    .blog-posts-container {
+      max-width: 940px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 32px;
+      padding-bottom: 90px;
+    }
+
+    .blog-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+    }
+    .blog-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--primary);
+      box-shadow: var(--card-shadow);
+    }
+    .blog-card-date {
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: var(--fg-light);
+      margin-bottom: 12px;
+    }
+    .blog-card-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.35rem;
+      color: var(--fg);
+      margin-bottom: 12px;
+      line-height: 1.35;
+      font-weight: 400;
+    }
+    .blog-card-excerpt {
+      color: var(--fg-muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .blog-card-link {
+      margin-top: auto;
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 0.88rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Post Detail Styling */
+    #blog-detail-section {
+      max-width: 780px;
+      margin: 0 auto;
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+
+    .post-detail-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2rem, 6vw, 3.4rem);
+      line-height: 1.15;
+      color: var(--fg);
+      margin-bottom: 12px;
+      font-weight: 400;
+    }
+    .post-detail-date {
+      font-family: monospace;
+      font-size: 0.88rem;
+      color: var(--fg-light);
+      margin-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 18px;
+    }
+    .post-detail-body {
+      font-size: 1.05rem;
+      line-height: 1.85;
+      color: var(--fg-muted);
+    }
+    .post-detail-body p {
+      margin-bottom: 24px;
+    }
+    .post-detail-body h2, .post-detail-body h3 {
+      font-family: 'DM Serif Display', serif;
+      font-weight: 400;
+      color: var(--fg);
+      margin: 44px 0 20px;
+    }
+    .post-detail-body h2 { font-size: 1.8rem; }
+    .post-detail-body h3 { font-size: 1.4rem; }
+    .post-detail-body ul, .post-detail-body ol {
+      margin-bottom: 24px;
+      padding-left: 22px;
+    }
+    .post-detail-body li {
+      margin-bottom: 8px;
+    }
+    .post-detail-body blockquote {
+      border-left: 3px solid var(--primary);
+      padding-left: 20px;
+      margin: 32px 0;
+      font-style: italic;
+      color: var(--fg);
+    }
+    .post-detail-body pre {
+      background: rgba(0,0,0,0.3);
+      padding: 18px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-family: monospace;
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+      font-size: 0.92rem;
+    }
+
+    /* ====================================================================
+       FOOTER
+    ==================================================================== */
+    footer {
+      padding: 22px 40px; border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.76rem; color: var(--fg-light);
+      position: relative; z-index: 10;
+    }
+
+    /* ====================================================================
+       SCROLL REVEAL
+    ==================================================================== */
+    .reveal {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.72s cubic-bezier(0.22, 1, 0.36, 1), transform 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.21s; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header { padding: 18px 20px; grid-template-columns: 1fr auto; }
+      header.scrolled { padding: 6px 20px; }
+      .header-socials { display: none; }
+      section { padding: 90px 20px 60px; }
+      footer { flex-direction: column; gap: 8px; text-align: center; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- LOADER -->
+  <div id="loader">
+    <div class="loader-count" id="loader-count">0<span class="loader-pct">%</span></div>
+  </div>
+
+  <!-- ANIMATED BLOB BAND (dark mode only) -->
+  <div class="blob-band" aria-hidden="true">
+    <svg viewBox="0 0 6000 1400" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <defs><filter id="gb"><feGaussianBlur stdDeviation="88"/></filter></defs>
+      <g filter="url(#gb)">
+        <ellipse cx="300"  cy="620" rx="430" ry="210" fill="#005048" transform="rotate(32 300 620)"/>
+        <ellipse cx="850"  cy="760" rx="660" ry="330" fill="#006e5a" transform="rotate(14 850 760)"/>
+        <ellipse cx="1450" cy="510" rx="310" ry="130" fill="#003d80" transform="rotate(-16 1450 510)"/>
+        <ellipse cx="1750" cy="860" rx="560" ry="200" fill="#6b0050" transform="rotate(-11 1750 860)"/>
+        <ellipse cx="2150" cy="610" rx="290" ry="105" fill="#900020" transform="rotate(-38 2150 610)"/>
+        <ellipse cx="1950" cy="960" rx="350" ry="115" fill="#004a20" transform="rotate(-40 1950 960)"/>
+        <ellipse cx="2250" cy="800" rx="470" ry="285" fill="#7a2060" transform="rotate(-18 2250 800)"/>
+        <ellipse cx="2650" cy="1060" rx="730" ry="270" fill="#7a4200"/>
+        <ellipse cx="2950" cy="840" rx="410" ry="165" fill="#6a4200" transform="rotate(-20 2950 840)"/>
+        <!-- Mirror for seamless loop -->
+        <ellipse cx="3300"  cy="620" rx="430" ry="210" fill="#005048" transform="rotate(32 3300 620)"/>
+        <ellipse cx="3850"  cy="760" rx="660" ry="330" fill="#006e5a" transform="rotate(14 3850 760)"/>
+        <ellipse cx="4450" cy="510" rx="310" ry="130" fill="#003d80" transform="rotate(-16 4450 510)"/>
+        <ellipse cx="4750" cy="860" rx="560" ry="200" fill="#6b0050" transform="rotate(-11 4750 860)"/>
+        <ellipse cx="5150" cy="610" rx="290" ry="105" fill="#900020" transform="rotate(-38 5150 610)"/>
+        <ellipse cx="4950" cy="960" rx="350" ry="115" fill="#004a20" transform="rotate(-40 4950 960)"/>
+        <ellipse cx="5250" cy="800" rx="470" ry="285" fill="#7a2060" transform="rotate(-18 5250 800)"/>
+        <ellipse cx="5650" cy="1060" rx="730" ry="270" fill="#7a4200"/>
+        <ellipse cx="5950" cy="840" rx="410" ry="165" fill="#6a4200" transform="rotate(-20 5950 840)"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- GRID LINES -->
+  <div class="grid-lines" aria-hidden="true">
+    <svg viewBox="0 0 1513 1120" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g opacity="0.04" stroke="currentColor">
+        <line x1="0.5"    y1="0" x2="0.5"    y2="1120"/>
+        <line x1="168.5"  y1="0" x2="168.5"  y2="1120"/>
+        <line x1="336.5"  y1="0" x2="336.5"  y2="1120"/>
+        <line x1="504.5"  y1="0" x2="504.5"  y2="1120"/>
+        <line x1="672.5"  y1="0" x2="672.5"  y2="1120"/>
+        <line x1="840.5"  y1="0" x2="840.5"  y2="1120"/>
+        <line x1="1008.5" y1="0" x2="1008.5" y2="1120"/>
+        <line x1="1176.5" y1="0" x2="1176.5"  y2="1120"/>
+        <line x1="1344.5" y1="0" x2="1344.5"  y2="1120"/>
+        <line x1="1512.5" y1="0" x2="1512.5"  y2="1120"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- =================================================================
+       HEADER
+  ================================================================== -->
+  <header>
+    <a href="/" class="logo">
+      <div class="logo-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="7" y1="17" x2="17" y2="7"/>
+          <polyline points="7 7 17 7 17 17"/>
+        </svg>
+      </div>
+      <span class="logo-name">faisal.</span>
+    </a>
+
+    <nav class="header-socials" aria-label="Social links">
+      <!-- loaded dynamically from config -->
+    </nav>
+
+    <div style="display: flex; align-items: center; gap: 24px;">
+      <a href="/blog/" class="blog-nav-link">blog</a>
+      <button class="hamburger" id="hamburger" aria-label="Open menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MOBILE NAV MENU -->
+  <div id="mobile-menu" role="dialog" aria-modal="true">
+    <button class="menu-close" id="menu-close" aria-label="Close menu">×</button>
+    <a href="/#about-section"   class="mobile-nav-link">about</a>
+    <a href="/#updates-section" class="mobile-nav-link">updates</a>
+    <a href="/#ventures-section" class="mobile-nav-link">ventures</a>
+    <a href="/#contact-section" class="mobile-nav-link">contact</a>
+    <a href="/blog/"             class="mobile-nav-link">blog</a>
+  </div>
+
+  <!-- FLOATING: Day/Night — bottom left -->
+  <button id="theme-toggle" aria-label="Toggle light / dark mode">
+    <svg id="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <svg id="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1"  x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22"   x2="5.64" y2="5.64"/>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78"  x2="5.64" y2="18.36"/>
+      <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"/>
+    </svg>
+  </button>
+
+  <main>
+    <!-- =================================================================
+         BLOG LISTING VIEW
+    ================================================================== -->
+    <section id="blog-list-section">
+      <h1 class="section-title">blog.</h1>
+      <div class="blog-posts-container" id="blog-posts-container">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- =================================================================
+         BLOG DETAIL VIEW
+    ================================================================== -->
+    <section id="blog-detail-section" style="display: none;">
+      <a href="/blog/" id="btn-back-blog" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--primary); text-decoration: none; margin-bottom: 30px; font-size: 0.95rem; transition: transform 0.2s;">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to Blog
+      </a>
+      <div id="post-detail-content">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span id="ft-copyright">© 2026 Faisal Ahmed Shariff</span>
+    <span id="ft-location">Bengaluru, India</span>
+  </footer>
+
+  <!-- =================================================================
+       JAVASCRIPT
+  ================================================================== -->
+  <script>
+    const supabaseUrl = 'https://nesfzytfgswcvgsrruxo.supabase.co';
+    const supabaseKey = 'sb_publishable_zOQxpja5sMsQIXs6MgsMyA_6mNZ-Ffo';
+    const { createClient } = supabase;
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+    let dataLoaded = false;
+    let blogPosts = [];
+
+    // Helper: Map social platforms to SVGs
+    function getSocialSvg(platform) {
+      platform = platform.toLowerCase();
+      if (platform === 'linkedin') return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>`;
+      if (platform === 'instagram') return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>`;
+      if (platform === 'github') return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>`;
+      if (platform === 'email' || platform === 'mail') return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`;
+      return '';
+    }
+
+    async function loadBlogData() {
+      try {
+        const [configRes, postsRes] = await Promise.all([
+          supabaseClient.from('portfolio_config').select('*'),
+          supabaseClient.from('blog_posts').select('*').eq('is_visible', true).order('published_at', { ascending: false })
+        ]);
+
+        if (configRes.error) throw configRes.error;
+        if (postsRes.error) throw postsRes.error;
+
+        const config = {};
+        configRes.data.forEach(item => {
+          config[item.key] = item.value;
+        });
+
+        // 1. Populate Social platforms in Header
+        if (config.hero_socials && Array.isArray(config.hero_socials)) {
+          const headerSocials = document.querySelector('.header-socials');
+          if (headerSocials) {
+            headerSocials.innerHTML = config.hero_socials.map(s => {
+              const svg = getSocialSvg(s.platform);
+              return `<a href="${s.url}" id="h-${s.platform}" target="_blank" rel="noopener noreferrer" aria-label="${s.label}">${svg}</a>`;
+            }).join('');
+          }
+        }
+
+        // 2. Populate Footer fields
+        if (config.footer_copyright) document.getElementById('ft-copyright').innerText = config.footer_copyright;
+        if (config.footer_location) document.getElementById('ft-location').innerText = config.footer_location;
+
+        blogPosts = postsRes.data;
+
+        // 3. Render content depending on URL routing
+        renderView();
+
+        dataLoaded = true;
+      } catch (err) {
+        console.error('Error fetching blog data:', err);
+        dataLoaded = true;
+      }
+    }
+
+    function renderView() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const postSlug = urlParams.get('post');
+
+      const listSection = document.getElementById('blog-list-section');
+      const detailSection = document.getElementById('blog-detail-section');
+
+      if (postSlug) {
+        // Post Detail View
+        const post = blogPosts.find(p => p.slug === postSlug);
+        
+        listSection.style.display = 'none';
+        detailSection.style.display = 'block';
+
+        const detailContent = document.getElementById('post-detail-content');
+        if (post) {
+          const dateStr = new Date(post.published_at).toLocaleDateString(undefined, {
+            year: 'numeric', month: 'long', day: 'numeric'
+          });
+          document.title = `${post.title} | Faisal Ahmed Shariff`;
+          detailContent.innerHTML = `
+            <div class="reveal">
+              <h1 class="post-detail-title">${escapeHtml(post.title)}</h1>
+              <div class="post-detail-date">Published on ${dateStr}</div>
+              <div class="post-detail-body">${post.content}</div>
+            </div>
+          `;
+        } else {
+          document.title = 'Post Not Found | Faisal Ahmed Shariff';
+          detailContent.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+              <h2>Post Not Found</h2>
+              <p style="color: var(--fg-muted); margin-top: 10px;">The blog post you are looking for does not exist or has been removed.</p>
+            </div>
+          `;
+        }
+        initScrollReveal();
+      } else {
+        // Listing View
+        document.title = 'Blog | Faisal Ahmed Shariff';
+        listSection.style.display = 'block';
+        detailSection.style.display = 'none';
+
+        const container = document.getElementById('blog-posts-container');
+        if (blogPosts.length === 0) {
+          container.style.display = 'block';
+          container.innerHTML = `<p style="color:var(--fg-muted); text-align:center; padding: 40px; font-size: 1.1rem;">No blog posts published yet.</p>`;
+          initScrollReveal();
+          return;
+        }
+
+        container.style.display = 'grid';
+        container.innerHTML = blogPosts.map((post, i) => {
+          const dateStr = new Date(post.published_at).toLocaleDateString(undefined, {
+            year: 'numeric', month: 'long', day: 'numeric'
+          });
+          const delayClass = i % 3 === 1 ? 'reveal-delay-1' : (i % 3 === 2 ? 'reveal-delay-2' : '');
+          return `
+            <a href="?post=${post.slug}" class="blog-card reveal ${delayClass}">
+              <div class="blog-card-date">${dateStr}</div>
+              <h2 class="blog-card-title">${escapeHtml(post.title)}</h2>
+              <p class="blog-card-excerpt">${escapeHtml(post.excerpt)}</p>
+              <span class="blog-card-link">
+                Read Post
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7"></line>
+                  <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+              </span>
+            </a>
+          `;
+        }).join('');
+        initScrollReveal();
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Subscribe to realtime updates
+    function setupRealtime() {
+      supabaseClient
+        .channel('blog_realtime_updates')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'blog_posts' }, async () => {
+          const { data, error } = await supabaseClient
+            .from('blog_posts')
+            .select('*')
+            .eq('is_visible', true)
+            .order('published_at', { ascending: false });
+          if (!error && data) {
+            blogPosts = data;
+            renderView();
+          }
+        })
+        .subscribe();
+    }
+
+    // Visitor session unique tracking
+    (async function trackVisitor() {
+      try {
+        if (localStorage.getItem('faisal_admin_mode') === 'true') {
+          return;
+        }
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session && session.user && session.user.email === 'faashariff2829@gmail.com') {
+          localStorage.setItem('faisal_admin_mode', 'true');
+          return;
+        }
+
+        if (!sessionStorage.getItem('faisal_portfolio_session')) {
+          const sessionKey = 'session_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now();
+          sessionStorage.setItem('faisal_portfolio_session', sessionKey);
+          
+          await supabaseClient
+            .from('page_views')
+            .insert([{ source_page: window.location.href }]);
+        }
+      } catch (err) {
+        console.error('Error tracking visitor:', err);
+      }
+    })();
+
+    /* ---- LOADER ANIMATION CONTROL ---- */
+    (function () {
+      const loaderEl = document.getElementById('loader');
+      const countEl  = document.getElementById('loader-count');
+      let count = 0;
+      const tick = setInterval(() => {
+        if (count < 99) {
+          count += Math.ceil(Math.random() * 3 + 1);
+          if (count > 99) count = 99;
+          countEl.innerHTML = count + '<span class="loader-pct">%</span>';
+        } else if (count === 99 && dataLoaded) {
+          count = 100;
+          clearInterval(tick);
+          countEl.innerHTML = '100<span class="loader-pct">%</span>';
+          setTimeout(() => {
+            loaderEl.classList.add('hide');
+            document.body.classList.add('loaded');
+          }, 280);
+        }
+      }, 17);
+    })();
+
+    /* ---- DARK / LIGHT TOGGLE ---- */
+    const html     = document.documentElement;
+    const moonIcon = document.getElementById('moon-icon');
+    const sunIcon  = document.getElementById('sun-icon');
+
+    function setLight(on) {
+      if (on) {
+        html.classList.add('light');
+        moonIcon.style.display = 'none';
+        sunIcon.style.display  = 'block';
+      } else {
+        html.classList.remove('light');
+        moonIcon.style.display = 'block';
+        sunIcon.style.display  = 'none';
+      }
+      localStorage.setItem('theme', on ? 'light' : 'dark');
+    }
+
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      setLight(!html.classList.contains('light'));
+    });
+
+    if (localStorage.getItem('theme') === 'light') setLight(true);
+
+    /* ---- HAMBURGER MENU ---- */
+    const hamburger  = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuClose  = document.getElementById('menu-close');
+    
+    if (hamburger) {
+      hamburger.addEventListener('click', () => { mobileMenu.classList.add('open'); document.body.style.overflow = 'hidden'; });
+    }
+    if (menuClose) {
+      menuClose.addEventListener('click', close);
+    }
+    document.querySelectorAll('.mobile-nav-link').forEach(a => a.addEventListener('click', close));
+    function close() { mobileMenu.classList.remove('open'); document.body.style.overflow = ''; }
+
+    /* ---- SCROLL REVEAL ---- */
+    let obs = null;
+    function initScrollReveal() {
+      if (obs) {
+        obs.disconnect();
+      }
+      obs = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+      }, { threshold: 0.05 });
+
+      document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+    }
+
+    // Load URL state pop changes
+    window.addEventListener('popstate', () => {
+      renderView();
+    });
+
+    // Handle back button clicks without page refresh
+    document.getElementById('btn-back-blog').addEventListener('click', (e) => {
+      e.preventDefault();
+      history.pushState(null, '', '/blog/');
+      renderView();
+    });
+
+    // Convert relative navigation clicks on list view card items to use history pushState
+    document.getElementById('blog-posts-container').addEventListener('click', (e) => {
+      const card = e.target.closest('.blog-card');
+      if (card) {
+        e.preventDefault();
+        const href = card.getAttribute('href');
+        history.pushState(null, '', href);
+        renderView();
+      }
+    });
+
+    // Run fetching data immediately
+    loadBlogData();
+    setupRealtime();
+
+    const headerEl = document.querySelector('header');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) {
+        headerEl.classList.add('scrolled');
+      } else {
+        headerEl.classList.remove('scrolled');
+      }
+    });
+  </script>
+</body>
+</html>

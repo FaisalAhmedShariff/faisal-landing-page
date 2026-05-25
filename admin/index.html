@@ -672,6 +672,9 @@
         <button class="tab-btn" data-tab="tab-signups">
           ✉️ Newsletter Signups
         </button>
+        <button class="tab-btn" data-tab="tab-blog">
+          ✍️ Blog Posts
+        </button>
       </div>
 
       <!-- Main Contents Area -->
@@ -909,6 +912,25 @@
           </div>
         </div>
 
+        <!-- 7. BLOG POSTS PANEL -->
+        <div class="tab-content" id="tab-blog">
+          <div class="section-card">
+            <div class="card-title-bar">
+              <h2>Blog Posts</h2>
+              <button class="btn-primary" id="btn-new-blog-post" style="padding: 8px 16px; font-size: 0.85rem;">
+                + Add New Post
+              </button>
+            </div>
+            <div style="margin-bottom: 20px; font-size: 0.85rem; color: var(--fg-muted)">
+              Manage your blog posts here. Supports slugs, excerpts, content textareas, and visibility toggling.
+            </div>
+            
+            <div class="crud-list" id="blog-crud-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -1107,6 +1129,49 @@
     </div>
   </div>
 
+  <!-- D. Blog Post Modal -->
+  <div class="modal-overlay" id="modal-blog">
+    <div class="modal-card" style="max-width: 780px;">
+      <div class="card-title-bar">
+        <h3 id="modal-blog-title">Add Blog Post</h3>
+        <button class="btn-secondary" onclick="closeModal('modal-blog')" style="padding: 6px 12px; font-size: 0.8rem;">×</button>
+      </div>
+      <form id="form-blog">
+        <input type="hidden" id="blog-post-id">
+        <div class="form-grid">
+          <div class="form-group span-full">
+            <label class="form-label">Post Title</label>
+            <input type="text" id="blog-title" required placeholder="e.g. Scaling ZIVO CRM to 100 users" oninput="autoGenerateSlug()">
+          </div>
+          <div class="form-group span-full">
+            <label class="form-label">URL Slug (lowercase-with-hyphens)</label>
+            <input type="text" id="blog-slug" required placeholder="e.g. scaling-zivo-crm-to-100-users">
+          </div>
+          <div class="form-group span-full">
+            <label class="form-label">Short Excerpt / Summary</label>
+            <input type="text" id="blog-excerpt" required placeholder="A brief one-sentence preview of what this post covers...">
+          </div>
+          <div class="form-group span-full">
+            <label class="form-label">Full Body Content (HTML allowed)</label>
+            <textarea id="blog-content" rows="12" required placeholder="<p>Write your post content here...</p>&#10;&#10;<h2>Section Heading</h2>&#10;<p>Add details...</p>"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Publish Date</label>
+            <input type="datetime-local" id="blog-published-at" required>
+          </div>
+          <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 24px;">
+            <input type="checkbox" id="blog-is-visible" checked style="width: auto;">
+            <label class="form-label" for="blog-is-visible" style="margin-bottom: 0;">Visible / Published</label>
+          </div>
+        </div>
+        <div style="margin-top: 28px; display: flex; justify-content: flex-end; gap: 12px;">
+          <button type="button" class="btn-secondary" onclick="closeModal('modal-blog')">Cancel</button>
+          <button type="submit" class="btn-primary">Save Blog Post</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Global status alert banner -->
   <div id="global-status-toast" style="position: fixed; bottom: 24px; right: 24px; background: rgba(8, 12, 16, 0.95); border: 1px solid var(--primary); padding: 16px 24px; border-radius: 8px; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: none; align-items: center; gap: 12px; font-weight: 500;">
     <span style="color: var(--primary)">●</span>
@@ -1131,6 +1196,7 @@
     let signupsSortField = 'created_at';
     let signupsSortAsc = false;
     let realtimeChannel = null;
+    let blogPostsRaw = [];
     
     // Auth Listener on boot
     supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -1198,7 +1264,8 @@
           venturesRes,
           customRes,
           signupsRes,
-          viewsRes
+          viewsRes,
+          postsRes
         ] = await Promise.all([
           supabaseClient.from('portfolio_config').select('*'),
           supabaseClient.from('about_paragraphs').select('*').order('sort_order', { ascending: true }),
@@ -1206,7 +1273,8 @@
           supabaseClient.from('ventures').select('*').order('sort_order', { ascending: true }),
           supabaseClient.from('custom_sections').select('*').order('sort_order', { ascending: true }),
           supabaseClient.from('newsletter_signups').select('*').order('created_at', { ascending: false }),
-          supabaseClient.from('page_views').select('*', { count: 'exact', head: true })
+          supabaseClient.from('page_views').select('*', { count: 'exact', head: true }),
+          supabaseClient.from('blog_posts').select('*').order('published_at', { ascending: false })
         ]);
 
         if (configRes.error) throw configRes.error;
@@ -1216,6 +1284,7 @@
         if (customRes.error) throw customRes.error;
         if (signupsRes.error) throw signupsRes.error;
         if (viewsRes.error) throw viewsRes.error;
+        if (postsRes.error) throw postsRes.error;
 
         // Map config table
         portfolioConfig = {};
@@ -1225,6 +1294,7 @@
 
         aboutParagraphs = aboutRes.data;
         newsletterSignups = signupsRes.data;
+        blogPostsRaw = postsRes.data;
 
         // Populate Stats
         document.getElementById('stats-total-visitors').innerText = viewsRes.count || 0;
@@ -1236,6 +1306,7 @@
         populateVenturesList(venturesRes.data);
         populateCustomList(customRes.data);
         populateSignupsList();
+        populateBlogList(postsRes.data);
         setupSignupsRealtime();
 
       } catch (err) {
@@ -2250,6 +2321,16 @@
             document.getElementById('stats-total-visitors').innerText = count;
           }
         })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'blog_posts' }, async () => {
+          const { data, error } = await supabaseClient
+            .from('blog_posts')
+            .select('*')
+            .order('published_at', { ascending: false });
+          if (!error && data) {
+            blogPostsRaw = data;
+            populateBlogList(data);
+          }
+        })
         .subscribe();
     }
 
@@ -2257,6 +2338,149 @@
     setupSignupsSort();
     document.getElementById('btn-copy-emails').addEventListener('click', copyAllEmails);
     document.getElementById('btn-export-csv').addEventListener('click', exportSignupsToCSV);
+
+    // ====================================================================
+    // PANEL G: BLOG POSTS PANEL
+    // ====================================================================
+    function populateBlogList(data) {
+      const container = document.getElementById('blog-crud-list');
+      if (!container) return;
+
+      if (!data || data.length === 0) {
+        container.innerHTML = `<p style="color:var(--fg-muted); padding:20px; text-align:center;">No blog posts created yet. Publish one!</p>`;
+        return;
+      }
+
+      container.innerHTML = data.map(post => {
+        const dateStr = new Date(post.published_at).toLocaleString();
+        const statusBadge = post.is_visible 
+          ? `<span style="font-size:0.75rem; background:rgba(74, 240, 196, 0.15); color:var(--primary); padding:2px 8px; border-radius:20px; margin-left:8px; font-weight:600;">Published</span>` 
+          : `<span style="font-size:0.75rem; background:rgba(255,255,255,0.06); color:var(--fg-muted); padding:2px 8px; border-radius:20px; margin-left:8px; font-weight:600;">Draft</span>`;
+        
+        return `
+          <div class="crud-item">
+            <div class="crud-info">
+              <div class="crud-heading">${escapeHtml(post.title)} ${statusBadge}</div>
+              <div class="crud-meta-row">
+                <span>🔗 Slug: <strong>${escapeHtml(post.slug)}</strong></span>
+                <span>📅 Date: ${dateStr}</span>
+              </div>
+            </div>
+            <div class="crud-actions">
+              <button class="btn-secondary action-btn" onclick="openEditBlog('${post.id}')">Edit</button>
+              <button class="btn-danger action-btn" onclick="deleteBlogPost('${post.id}')">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Auto generate slug from title
+    window.autoGenerateSlug = function() {
+      const title = document.getElementById('blog-title').value;
+      const slugInput = document.getElementById('blog-slug');
+      if (title) {
+        const slug = title
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '') // remove special characters
+          .replace(/\s+/g, '-')         // replace spaces with hyphens
+          .replace(/-+/g, '-')          // replace multiple hyphens with single hyphen
+          .trim();
+        slugInput.value = slug;
+      }
+    };
+
+    // Open blog post modal for editing
+    window.openEditBlog = function(id) {
+      const post = blogPostsRaw.find(p => p.id === id);
+      if (!post) return;
+
+      document.getElementById('blog-post-id').value = post.id;
+      document.getElementById('blog-title').value = post.title;
+      document.getElementById('blog-slug').value = post.slug;
+      document.getElementById('blog-excerpt').value = post.excerpt;
+      document.getElementById('blog-content').value = post.content;
+      
+      // format date to local datetime-local format: YYYY-MM-DDTHH:MM
+      const dateObj = new Date(post.published_at);
+      const tzOffset = dateObj.getTimezoneOffset() * 60000;
+      const localISOTime = (new Date(dateObj - tzOffset)).toISOString().slice(0, 16);
+      document.getElementById('blog-published-at').value = localISOTime;
+      
+      document.getElementById('blog-is-visible').checked = post.is_visible;
+
+      document.getElementById('modal-blog-title').innerText = 'Edit Blog Post';
+      openModal('modal-blog');
+    };
+
+    // Delete Blog Post
+    window.deleteBlogPost = async function(id) {
+      if (!confirm('Are you sure you want to delete this blog post?')) return;
+      try {
+        const { error } = await supabaseClient
+          .from('blog_posts')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        showToast('Blog post deleted successfully!');
+        loadAllDashboardData();
+      } catch (err) {
+        showToast('Error deleting blog post: ' + err.message, true);
+      }
+    };
+
+    // Bind add new button
+    document.getElementById('btn-new-blog-post').addEventListener('click', () => {
+      document.getElementById('form-blog').reset();
+      document.getElementById('blog-post-id').value = '';
+      
+      // Set current date/time in local timezone
+      const dateObj = new Date();
+      const tzOffset = dateObj.getTimezoneOffset() * 60000;
+      const localISOTime = (new Date(dateObj - tzOffset)).toISOString().slice(0, 16);
+      document.getElementById('blog-published-at').value = localISOTime;
+
+      document.getElementById('modal-blog-title').innerText = 'Create Blog Post';
+      openModal('modal-blog');
+    });
+
+    // Form submit logic
+    document.getElementById('form-blog').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const id = document.getElementById('blog-post-id').value;
+      const title = document.getElementById('blog-title').value.trim();
+      const slug = document.getElementById('blog-slug').value.trim();
+      const excerpt = document.getElementById('blog-excerpt').value.trim();
+      const content = document.getElementById('blog-content').value.trim();
+      const publishedAt = new Date(document.getElementById('blog-published-at').value).toISOString();
+      const isVisible = document.getElementById('blog-is-visible').checked;
+
+      const payload = {
+        title,
+        slug,
+        excerpt,
+        content,
+        published_at: publishedAt,
+        is_visible: isVisible
+      };
+
+      if (id) payload.id = id;
+
+      try {
+        const { error } = await supabaseClient
+          .from('blog_posts')
+          .upsert(payload);
+
+        if (error) throw error;
+
+        closeModal('modal-blog');
+        showToast('Blog post saved successfully!');
+        loadAllDashboardData();
+      } catch (err) {
+        showToast('Error saving blog post: ' + err.message, true);
+      }
+    });
   </script>
 </body>
 </html>

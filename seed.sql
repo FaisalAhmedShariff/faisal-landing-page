@@ -91,3 +91,23 @@ commit;
 -- commit;
 
 
+-- 8. Blog Posts Table (Run in SQL Editor to create)
+-- create table if not exists public.blog_posts (
+--   id uuid default uuid_generate_v4() primary key,
+--   title text not null,
+--   slug text not null unique,
+--   excerpt text not null,
+--   content text not null,
+--   is_visible boolean not null default true,
+--   published_at timestamp with time zone default timezone('utc'::text, now()) not null,
+--   created_at timestamp with time zone default timezone('utc'::text, now()) not null
+-- );
+-- alter table public.blog_posts enable row level security;
+-- create policy "Allow public read on visible blog posts" on public.blog_posts for select using (is_visible = true);
+-- create policy "Allow admin read/write on all blog posts" on public.blog_posts for all using (auth.role() = 'authenticated');
+-- begin;
+--   alter publication supabase_realtime add table public.blog_posts;
+-- commit;
+
+
+

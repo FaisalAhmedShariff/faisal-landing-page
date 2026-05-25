@@ -397,6 +397,20 @@
     }
     .btn-ghost:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
 
+    .blog-nav-link {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--fg-muted);
+      transition: color 0.2s, transform 0.2s;
+      text-transform: lowercase;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .blog-nav-link:hover {
+      color: var(--fg);
+      transform: translateY(-1px);
+    }
+
     /* Essentials strip */
     .essentials-strip {
       width: 100%; max-width: 860px;
@@ -819,9 +833,12 @@
       </a>
     </nav>
 
-    <button class="hamburger" id="hamburger" aria-label="Open menu">
-      <span></span><span></span>
-    </button>
+    <div style="display: flex; align-items: center; gap: 24px;">
+      <a href="/blog/" class="blog-nav-link">blog</a>
+      <button class="hamburger" id="hamburger" aria-label="Open menu">
+        <span></span><span></span>
+      </button>
+    </div>
   </header>
 
   <!-- MOBILE MENU -->
@@ -831,6 +848,7 @@
     <a href="#updates-section" class="mobile-nav-link">updates</a>
     <a href="#ventures-section" class="mobile-nav-link">ventures</a>
     <a href="#contact-section" class="mobile-nav-link">contact</a>
+    <a href="/blog/"             class="mobile-nav-link">blog</a>
   </div>
 
   <!-- FLOATING: Day/Night — bottom left -->
