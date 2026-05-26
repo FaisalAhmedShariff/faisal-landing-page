@@ -510,14 +510,10 @@
     /* ====================================================================
        SECTIONS COMMON
     ==================================================================== */
-    section {
-      position: relative;
-      z-index: 10;
-      padding: 90px 40px;
-      -webkit-transform: translate3d(0, 0, 0);
-      transform: translate3d(0, 0, 0);
-    }
-    header, footer {
+    section { position: relative; z-index: 10; padding: 90px 40px; }
+    
+    /* iOS Safari performance layer overrides */
+    .is-ios section, .is-ios header, .is-ios footer {
       -webkit-transform: translate3d(0, 0, 0);
       transform: translate3d(0, 0, 0);
     }
@@ -745,34 +741,45 @@
        SCROLL REVEAL
     ==================================================================== */
     .reveal {
+      opacity:0; transform:translateY(28px);
+      transition:opacity 0.72s cubic-bezier(0.22,1,0.36,1), transform 0.72s cubic-bezier(0.22,1,0.36,1);
+    }
+    .reveal.visible { opacity:1; transform:none; }
+    .reveal-delay-1 { transition-delay:0.1s; }
+    .reveal-delay-2 { transition-delay:0.21s; }
+    .reveal-delay-3 { transition-delay:0.32s; }
+    .reveal-delay-4 { transition-delay:0.43s; }
+
+    /* iOS Safari hardware accelerated reveal animation overrides */
+    .is-ios .reveal {
       opacity: 0;
       transform: translate3d(0, 24px, 0);
       -webkit-transform: translate3d(0, 24px, 0);
       transition: opacity 0.72s cubic-bezier(0.22,1,0.36,1), transform 0.72s cubic-bezier(0.22,1,0.36,1);
       -webkit-transition: opacity 0.72s cubic-bezier(0.22,1,0.36,1), -webkit-transform 0.72s cubic-bezier(0.22,1,0.36,1);
     }
-    .reveal:not(.visible) {
+    .is-ios .reveal:not(.visible) {
       will-change: transform, opacity;
     }
-    .reveal.visible {
+    .is-ios .reveal.visible {
       opacity: 1;
       transform: translate3d(0, 0, 0);
       -webkit-transform: translate3d(0, 0, 0);
     }
-    .reveal-delay-1 { transition-delay: 0.1s; }
-    .reveal-delay-2 { transition-delay: 0.21s; }
-    .reveal-delay-3 { transition-delay: 0.32s; }
-    .reveal-delay-4 { transition-delay: 0.43s; }
+
+    /* Only on iOS, disable the heavy moving animated SVG blob band to prevent WebKit rendering crash */
+    .is-ios .blob-band {
+      display: none !important;
+    }
+    html.is-ios:not(.light) body {
+      background: radial-gradient(circle at 80% 20%, #0c211f 0%, #080c10 70%) no-repeat fixed;
+    }
 
     /* ====================================================================
        RESPONSIVE
     ==================================================================== */
     @media (max-width: 1024px) {
       .about-grid { gap: 48px; }
-      .blob-band { display: none !important; }
-      html:not(.light) body {
-        background: radial-gradient(circle at 80% 20%, #0c211f 0%, #080c10 70%) no-repeat fixed;
-      }
     }
 
     @media (max-width: 768px) {
@@ -1265,6 +1272,15 @@
        JAVASCRIPT
   ================================================================== -->
   <script>
+    // iOS detection for targeted layout/performance compatibility overrides
+    (function detectIOS() {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (isIOS) {
+        document.documentElement.classList.add('is-ios');
+      }
+    })();
+
     /* ---- SUPABASE PORTFOLIO INTEGRATION ---- */
     const supabaseUrl = 'https://nesfzytfgswcvgsrruxo.supabase.co';
     const supabaseKey = 'sb_publishable_zOQxpja5sMsQIXs6MgsMyA_6mNZ-Ffo';
