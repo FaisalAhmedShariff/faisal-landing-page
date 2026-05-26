@@ -1625,6 +1625,12 @@
       const loaderEl = document.getElementById('loader');
       const countEl  = document.getElementById('loader-count');
       let count = 0;
+
+      // Safety timeout: force loading to complete after 1.0s if Supabase is slow
+      setTimeout(() => {
+        dataLoaded = true;
+      }, 1000);
+
       const tick = setInterval(() => {
         if (count < 99) {
           count += Math.ceil(Math.random() * 3 + 1);
@@ -1802,6 +1808,13 @@
     function startNameRevealAnimation(solidText, outlineText) {
       const heroNameEl = document.getElementById('hero-name');
       if (!heroNameEl) return;
+
+      // Prevent animation flash if the name has not changed
+      if (heroNameEl.dataset.renderedSolid === solidText && heroNameEl.dataset.renderedOutline === outlineText) {
+        return;
+      }
+      heroNameEl.dataset.renderedSolid = solidText;
+      heroNameEl.dataset.renderedOutline = outlineText;
 
       heroNameEl.classList.remove('reveal-active');
       heroNameEl.innerHTML = "";
