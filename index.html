@@ -510,7 +510,17 @@
     /* ====================================================================
        SECTIONS COMMON
     ==================================================================== */
-    section { position: relative; z-index: 10; padding: 90px 40px; }
+    section {
+      position: relative;
+      z-index: 10;
+      padding: 90px 40px;
+      -webkit-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
+    }
+    header, footer {
+      -webkit-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
+    }
     .section-title {
       font-family: 'DM Serif Display', serif;
       font-size: clamp(1.9rem, 5vw, 3.8rem); font-weight: 400;
@@ -735,20 +745,34 @@
        SCROLL REVEAL
     ==================================================================== */
     .reveal {
-      opacity:0; transform:translateY(28px);
-      transition:opacity 0.72s cubic-bezier(0.22,1,0.36,1), transform 0.72s cubic-bezier(0.22,1,0.36,1);
+      opacity: 0;
+      transform: translate3d(0, 24px, 0);
+      -webkit-transform: translate3d(0, 24px, 0);
+      transition: opacity 0.72s cubic-bezier(0.22,1,0.36,1), transform 0.72s cubic-bezier(0.22,1,0.36,1);
+      -webkit-transition: opacity 0.72s cubic-bezier(0.22,1,0.36,1), -webkit-transform 0.72s cubic-bezier(0.22,1,0.36,1);
     }
-    .reveal.visible { opacity:1; transform:none; }
-    .reveal-delay-1 { transition-delay:0.1s; }
-    .reveal-delay-2 { transition-delay:0.21s; }
-    .reveal-delay-3 { transition-delay:0.32s; }
-    .reveal-delay-4 { transition-delay:0.43s; }
+    .reveal:not(.visible) {
+      will-change: transform, opacity;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+      -webkit-transform: translate3d(0, 0, 0);
+    }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.21s; }
+    .reveal-delay-3 { transition-delay: 0.32s; }
+    .reveal-delay-4 { transition-delay: 0.43s; }
 
     /* ====================================================================
        RESPONSIVE
     ==================================================================== */
     @media (max-width: 1024px) {
       .about-grid { gap: 48px; }
+      .blob-band { display: none !important; }
+      html:not(.light) body {
+        background: radial-gradient(circle at 80% 20%, #0c211f 0%, #080c10 70%) no-repeat fixed;
+      }
     }
 
     @media (max-width: 768px) {
@@ -1654,16 +1678,13 @@
     document.querySelectorAll('.mobile-nav-link').forEach(a => a.addEventListener('click', close));
     function close() { mobileMenu.classList.remove('open'); document.body.style.overflow = ''; }
 
-    /* ---- DRAGGABLE CARD SCROLL ---- */
+    /* ---- DRAGGABLE CARD SCROLL (Desktop mouse drag) ---- */
     const scroller = document.getElementById('cards-scroll');
     let isDown = false, startX = 0, scrollL = 0;
     scroller.addEventListener('mousedown',  e => { isDown = true; scroller.classList.add('dragging'); startX = e.pageX - scroller.offsetLeft; scrollL = scroller.scrollLeft; });
     scroller.addEventListener('mouseleave', () => { isDown = false; scroller.classList.remove('dragging'); });
     scroller.addEventListener('mouseup',    () => { isDown = false; scroller.classList.remove('dragging'); });
     scroller.addEventListener('mousemove',  e => { if (!isDown) return; e.preventDefault(); scroller.scrollLeft = scrollL - (e.pageX - scroller.offsetLeft - startX) * 1.5; });
-    let tX = 0, tSL = 0;
-    scroller.addEventListener('touchstart', e => { tX = e.touches[0].clientX; tSL = scroller.scrollLeft; }, { passive: true });
-    scroller.addEventListener('touchmove',  e => { scroller.scrollLeft = tSL + (tX - e.touches[0].clientX); }, { passive: true });
 
     /* ---- SCROLL REVEAL ---- */
     let obs = null;
