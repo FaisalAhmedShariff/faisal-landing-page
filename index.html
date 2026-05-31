@@ -1732,32 +1732,31 @@
     (function () {
       const loaderEl = document.getElementById('loader');
 
-      // Safety timeout: force loading to complete after 3.5s if Supabase is slow
+      let windowLoaded = document.readyState === 'complete';
+      if (!windowLoaded) {
+        window.addEventListener('load', () => {
+          windowLoaded = true;
+        });
+      }
+
+      // Safety timeout: force loading to complete after 4.5s if Supabase is slow
       setTimeout(() => {
         dataLoaded = true;
-      }, 3500);
+      }, 4500);
 
       let logoAnimationCompleted = false;
 
       // The logo drawing animation takes 2.5s. We hold for 500ms (total 3.0s)
       setTimeout(() => {
         logoAnimationCompleted = true;
-        checkRevealSite();
       }, 3000);
 
       const checkInterval = setInterval(() => {
-        if (dataLoaded && logoAnimationCompleted) {
+        if (dataLoaded && logoAnimationCompleted && windowLoaded) {
           clearInterval(checkInterval);
           revealSite();
         }
       }, 50);
-
-      function checkRevealSite() {
-        if (dataLoaded) {
-          clearInterval(checkInterval);
-          revealSite();
-        }
-      }
 
       function revealSite() {
         // Step 1: Fade the logo centerpiece out to solid black
