@@ -88,21 +88,80 @@
     ::selection { background: var(--primary); color: #000; }
 
     /* ====================================================================
-       LOADER
+       CINEMATIC INTRO LOADER
     ==================================================================== */
     #loader {
       position: fixed; inset: 0; z-index: 9999;
-      background: #080c10;
       display: flex; align-items: center; justify-content: center;
-      transition: opacity 0.7s ease;
+      overflow: hidden;
+      background: transparent;
+      pointer-events: auto;
     }
-    #loader.hide { opacity: 0; pointer-events: none; }
-    .loader-count {
+    #loader.hide {
+      pointer-events: none;
+    }
+    
+    /* Left and Right sliding panels */
+    .loader-panel {
+      position: absolute;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      background: #080c10;
+      transition: transform 1.1s cubic-bezier(0.85, 0, 0.15, 1);
+      z-index: 1;
+    }
+    .loader-panel.panel-left {
+      left: 0;
+      transform: translateX(0);
+    }
+    .loader-panel.panel-right {
+      right: 0;
+      transform: translateX(0);
+    }
+    
+    /* When loader is triggered to hide, slide the panels away */
+    #loader.hide .panel-left {
+      transform: translateX(-100%);
+    }
+    #loader.hide .panel-right {
+      transform: translateX(100%);
+    }
+    
+    /* Central Name Container */
+    .intro-name {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0 24px;
+      padding: 20px;
+      text-align: center;
+      transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1), transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    #loader.hide .intro-name {
+      opacity: 0;
+      transform: scale(1.1);
+    }
+    
+    .intro-word {
       font-family: 'Syne', sans-serif;
-      font-size: clamp(80px, 18vw, 240px);
-      font-weight: 800; color: #f0f4f8; line-height: 1;
+      font-size: clamp(2.5rem, 6vw, 5.5rem);
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1;
+      opacity: 0;
+      transform: translateY(40px) scale(0.95);
+      /* Easing curve for a snappy, confident entrance */
+      transition: opacity 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    .loader-pct { font-size: 0.34em; vertical-align: super; opacity: 0.38; margin-left: 0.06em; }
+    
+    /* Triggered word entrance states */
+    .intro-word.reveal-in {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
 
     /* ====================================================================
        ANIMATED BLOB BAND — dark mode: scrolls right → left
@@ -843,7 +902,13 @@
 
   <!-- LOADER -->
   <div id="loader">
-    <div class="loader-count" id="loader-count">0<span class="loader-pct">%</span></div>
+    <div class="loader-panel panel-left"></div>
+    <div class="loader-panel panel-right"></div>
+    <div class="intro-name">
+      <span class="intro-word">Faisal</span>
+      <span class="intro-word">Ahmed</span>
+      <span class="intro-word">Shariff.</span>
+    </div>
   </div>
 
   <!-- ANIMATED BLOB BAND (dark mode only) -->
@@ -1636,35 +1701,60 @@
         .subscribe();
     }
 
-    /* ---- LOADER ANIMATION CONTROL ---- */
+    /* ---- CINEMATIC INTRO LOADER CONTROL ---- */
     (function () {
       const loaderEl = document.getElementById('loader');
-      const countEl  = document.getElementById('loader-count');
-      let count = 0;
+      const words = document.querySelectorAll('.intro-word');
 
-      // Safety timeout: force loading to complete after 1.0s if Supabase is slow
+      // Safety timeout: force loading to complete after 1.5s if Supabase is slow
       setTimeout(() => {
         dataLoaded = true;
-      }, 1000);
+      }, 1500);
 
-      const tick = setInterval(() => {
-        if (count < 99) {
-          count += Math.ceil(Math.random() * 3 + 1);
-          if (count > 99) count = 99;
-          countEl.innerHTML = count + '<span class="loader-pct">%</span>';
-        } else if (count === 99 && dataLoaded) {
-          count = 100;
-          clearInterval(tick);
-          countEl.innerHTML = '100<span class="loader-pct">%</span>';
-          setTimeout(() => {
-            loaderEl.classList.add('hide');
-            document.body.classList.add('loaded');
+      let wordAnimationsCompleted = false;
+
+      // Confident, snappy word entrance sequence
+      words.forEach((word, idx) => {
+        setTimeout(() => {
+          word.classList.add('reveal-in');
+          if (idx === words.length - 1) {
+            // Once the final word is fully displayed
             setTimeout(() => {
-              startNameRevealAnimation(heroSolidName, heroOutlineName);
-            }, 400);
-          }, 280);
+              wordAnimationsCompleted = true;
+              checkRevealSite();
+            }, 500); // brief hold moment
+          }
+        }, 150 + idx * 300); // snappy 300ms staggered delay
+      });
+
+      const checkInterval = setInterval(() => {
+        if (dataLoaded && wordAnimationsCompleted) {
+          clearInterval(checkInterval);
+          revealSite();
         }
-      }, 17);
+      }, 50);
+
+      function checkRevealSite() {
+        if (dataLoaded) {
+          clearInterval(checkInterval);
+          revealSite();
+        }
+      }
+
+      function revealSite() {
+        loaderEl.classList.add('hide');
+        document.body.classList.add('loaded');
+
+        // Trigger landing page hero name reveal slightly after split slide-out begins
+        setTimeout(() => {
+          startNameRevealAnimation(heroSolidName, heroOutlineName);
+        }, 400);
+
+        // Delete loader from DOM after transition completes to clean up memory
+        setTimeout(() => {
+          loaderEl.remove();
+        }, 1200);
+      }
     })();
 
     /* ---- DARK / LIGHT TOGGLE ---- */
