@@ -1342,7 +1342,7 @@
         ] = await Promise.all([
           supabaseClient.from('portfolio_config').select('*'),
           supabaseClient.from('about_paragraphs').select('*').order('sort_order', { ascending: true }),
-          supabaseClient.from('timeline_entries').select('*').order('sort_order', { ascending: true }),
+          supabaseClient.from('timeline_entries').select('*').order('entry_date', { ascending: true, nullsFirst: false }).order('sort_order', { ascending: true }),
           supabaseClient.from('ventures').select('*').order('sort_order', { ascending: true }),
           supabaseClient.from('custom_sections').select('*').order('sort_order', { ascending: true })
         ]);

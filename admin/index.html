@@ -988,8 +988,8 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Sort Order (Higher value = shows later)</label>
-            <input type="number" id="timeline-sort-order" default="0" placeholder="0">
+            <label class="form-label">Event Date (For automatic sorting)</label>
+            <input type="date" id="timeline-entry-date" required>
           </div>
         </div>
         <div style="margin-top: 28px; display: flex; justify-content: flex-end; gap: 12px;">
@@ -1304,7 +1304,7 @@
         ] = await Promise.all([
           supabaseClient.from('portfolio_config').select('*'),
           supabaseClient.from('about_paragraphs').select('*').order('sort_order', { ascending: true }),
-          supabaseClient.from('timeline_entries').select('*').order('sort_order', { ascending: true }),
+          supabaseClient.from('timeline_entries').select('*').order('entry_date', { ascending: true, nullsFirst: false }).order('sort_order', { ascending: true }),
           supabaseClient.from('ventures').select('*').order('sort_order', { ascending: true }),
           supabaseClient.from('custom_sections').select('*').order('sort_order', { ascending: true }),
           supabaseClient.from('newsletter_signups').select('*').order('created_at', { ascending: false }),
@@ -1678,7 +1678,7 @@
               <div class="crud-heading">${item.title}</div>
               <div class="crud-meta-row">
                 <span>📅 ${item.month} ${item.year}</span>
-                <span>📶 Order: ${item.sort_order}</span>
+                <span>📅 Date: ${item.entry_date || 'Not set'}</span>
                 <span>🏷 ${tagsPills || 'None'}</span>
               </div>
               <div style="font-size:0.85rem; color:var(--fg-muted); margin-top:8px;">${item.description}</div>
@@ -1734,6 +1734,30 @@
       openModal('modal-timeline');
     });
 
+    // Autofill month and year when date is picked
+    document.getElementById('timeline-entry-date').addEventListener('change', (e) => {
+      const val = e.target.value;
+      if (!val) return;
+      
+      // Parse with timezone offset to avoid date shifting (uses local date)
+      const parts = val.split('-');
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      if (isNaN(d.getTime())) return;
+      
+      // Set year
+      document.getElementById('timeline-year').value = d.getFullYear();
+      
+      // Get short month name
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthShort = monthNames[d.getMonth()];
+      
+      // Only set if month input is empty
+      const monthInput = document.getElementById('timeline-month');
+      if (!monthInput.value) {
+        monthInput.value = monthShort;
+      }
+    });
+
     window.openEditTimeline = function(id) {
       const entry = timelineListRaw.find(e => e.id === id);
       if (!entry) return;
@@ -1743,7 +1767,7 @@
       document.getElementById('timeline-year').value = entry.year;
       document.getElementById('timeline-entry-title').value = entry.title;
       document.getElementById('timeline-description').value = entry.description;
-      document.getElementById('timeline-sort-order').value = entry.sort_order;
+      document.getElementById('timeline-entry-date').value = entry.entry_date || '';
       
       currentTags = [...(entry.tags || [])];
       renderTags();
@@ -1761,7 +1785,7 @@
       const year = parseInt(document.getElementById('timeline-year').value);
       const title = document.getElementById('timeline-entry-title').value;
       const description = document.getElementById('timeline-description').value;
-      const sortOrder = parseInt(document.getElementById('timeline-sort-order').value || 0);
+      const entryDate = document.getElementById('timeline-entry-date').value || null;
 
       const payload = {
         month,
@@ -1769,7 +1793,7 @@
         title,
         description,
         tags: currentTags,
-        sort_order: sortOrder
+        entry_date: entryDate
       };
 
       if (id) payload.id = id;
