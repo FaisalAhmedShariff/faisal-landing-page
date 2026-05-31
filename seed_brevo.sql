@@ -50,6 +50,7 @@ create table if not exists public.debug_logs (
 alter table public.debug_logs enable row level security;
 
 drop policy if exists "Allow admin read on debug_logs" on public.debug_logs;
+drop policy if exists "Allow admin delete on debug_logs" on public.debug_logs;
 create policy "Allow admin read on debug_logs" on public.debug_logs for select using (auth.role() = 'authenticated');
 create policy "Allow admin delete on debug_logs" on public.debug_logs for delete using (auth.role() = 'authenticated');
 
