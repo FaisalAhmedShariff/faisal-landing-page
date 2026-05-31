@@ -677,8 +677,8 @@
         <button class="tab-btn" data-tab="tab-custom">
           🧩 Custom Sections
         </button>
-        <button class="tab-btn" data-tab="tab-signups">
-          ✉️ Newsletter Signups
+        <button class="tab-btn" data-tab="tab-email">
+          ✉️ Email Settings
         </button>
         <button class="tab-btn" data-tab="tab-blog">
           ✍️ Blog Posts
@@ -794,32 +794,6 @@
               </div>
             </form>
           </div>
-
-          <!-- Brevo Email Settings Card -->
-          <div class="section-card">
-            <div class="card-title-bar">
-              <h2>Brevo Email Settings</h2>
-            </div>
-            <form id="form-email-config">
-              <div class="form-grid">
-                <div class="form-group span-full">
-                  <label class="form-label">Brevo API Key (SMTP v3)</label>
-                  <input type="password" id="cfg-brevo-api-key" placeholder="xkeysib-...">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Sender Email</label>
-                  <input type="email" id="cfg-brevo-sender-email" placeholder="faashariff2829@gmail.com">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Sender Name</label>
-                  <input type="text" id="cfg-brevo-sender-name" placeholder="Faisal Ahmed Shariff">
-                </div>
-              </div>
-              <div style="margin-top: 24px; text-align: right;">
-                <button type="submit" class="btn-primary">Save Email Settings</button>
-              </div>
-            </form>
-          </div>
         </div>
 
         <!-- 2. ABOUT BIO PANEL -->
@@ -911,11 +885,88 @@
           </div>
         </div>
 
-        <!-- 6. NEWSLETTER SIGNUPS PANEL -->
-        <div class="tab-content" id="tab-signups">
+        <!-- 6. EMAIL & NEWSLETTER SETTINGS PANEL -->
+        <div class="tab-content" id="tab-email">
+          
+          <!-- Brevo Credentials & Configuration Card -->
           <div class="section-card">
             <div class="card-title-bar">
-              <h2>Newsletter Signups</h2>
+              <h2>Brevo Integration & Email Settings</h2>
+            </div>
+            <form id="form-email-config">
+              <div class="form-grid">
+                <div class="form-group span-full">
+                  <label class="form-label">Brevo API Key (SMTP v3)</label>
+                  <input type="password" id="cfg-brevo-api-key" placeholder="xkeysib-..." required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Sender Email</label>
+                  <input type="email" id="cfg-brevo-sender-email" placeholder="faashariff2829@gmail.com" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Sender Name</label>
+                  <input type="text" id="cfg-brevo-sender-name" placeholder="Faisal Ahmed Shariff" required>
+                </div>
+              </div>
+              
+              <!-- Separator / Welcome Email Section -->
+              <h3 style="font-size: 1.1rem; color: var(--primary); margin-top: 32px; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; font-family: 'Syne', sans-serif;">Welcome Email Template</h3>
+              <div class="form-grid">
+                <div class="form-group span-full">
+                  <label class="form-label">Welcome Email Subject</label>
+                  <input type="text" id="cfg-welcome-subject" placeholder="Welcome!" required>
+                </div>
+                <div class="form-group span-full">
+                  <label class="form-label">Welcome Email HTML Content</label>
+                  <textarea id="cfg-welcome-html" rows="8" placeholder="<html>...</html>" required style="font-family: monospace; font-size: 0.85rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: var(--fg); padding: 12px; width: 100%; box-sizing: border-box;"></textarea>
+                </div>
+              </div>
+
+              <!-- Separator / Blog Notification Section -->
+              <h3 style="font-size: 1.1rem; color: var(--primary); margin-top: 32px; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; font-family: 'Syne', sans-serif;">Blog Notification Template</h3>
+              <div style="font-size: 0.8rem; color: var(--fg-muted); margin-bottom: 16px;">
+                Placeholders supported: <strong style="color: var(--primary); font-family: monospace;">{blog_title}</strong>, <strong style="color: var(--primary); font-family: monospace;">{blog_excerpt}</strong>, <strong style="color: var(--primary); font-family: monospace;">{blog_link}</strong>.
+              </div>
+              <div class="form-grid">
+                <div class="form-group span-full">
+                  <label class="form-label">Blog Notification Email Subject</label>
+                  <input type="text" id="cfg-blog-subject" placeholder="New post: {blog_title}" required>
+                </div>
+                <div class="form-group span-full">
+                  <label class="form-label">Blog Notification Email HTML Content</label>
+                  <textarea id="cfg-blog-html" rows="8" placeholder="<html>...</html>" required style="font-family: monospace; font-size: 0.85rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: var(--fg); padding: 12px; width: 100%; box-sizing: border-box;"></textarea>
+                </div>
+              </div>
+
+              <div style="margin-top: 24px; text-align: right;">
+                <button type="submit" class="btn-primary">Save All Email Configurations</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Send Test Welcome Email Card -->
+          <div class="section-card">
+            <div class="card-title-bar">
+              <h2>Send Test Welcome Email</h2>
+            </div>
+            <div style="margin-bottom: 16px; font-size: 0.85rem; color: var(--fg-muted)">
+              Preview your Welcome Email configuration by sending a test copy to your inbox. Make sure to click "Save All Email Configurations" above first!
+            </div>
+            <form id="form-test-email">
+              <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; min-width: 250px; margin-bottom: 0;">
+                  <label class="form-label">Test Recipient Email Address</label>
+                  <input type="email" id="test-recipient-email" placeholder="enter-your-email@example.com" required>
+                </div>
+                <button type="submit" class="btn-secondary" style="padding: 12px 24px;">Send Test Email</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Subscribers List Card -->
+          <div class="section-card">
+            <div class="card-title-bar">
+              <h2>Newsletter Subscribers</h2>
               <div class="header-actions" style="gap: 8px;">
                 <button class="btn-secondary" id="btn-copy-emails" style="padding: 8px 16px; font-size: 0.85rem;">
                   📋 Copy All Emails
@@ -1588,14 +1639,26 @@
       const apiKey = secretsRaw.find(s => s.key === 'brevo_api_key')?.value || '';
       const senderEmail = secretsRaw.find(s => s.key === 'brevo_sender_email')?.value || '';
       const senderName = secretsRaw.find(s => s.key === 'brevo_sender_name')?.value || '';
+      const welcomeSubject = secretsRaw.find(s => s.key === 'welcome_email_subject')?.value || 'Welcome!';
+      const welcomeHtml = secretsRaw.find(s => s.key === 'welcome_email_html')?.value || '';
+      const blogSubject = secretsRaw.find(s => s.key === 'blog_email_subject_template')?.value || 'New post: {blog_title}';
+      const blogHtml = secretsRaw.find(s => s.key === 'blog_email_html_template')?.value || '';
 
       const apiKeyInput = document.getElementById('cfg-brevo-api-key');
       const senderEmailInput = document.getElementById('cfg-brevo-sender-email');
       const senderNameInput = document.getElementById('cfg-brevo-sender-name');
+      const welcomeSubjectInput = document.getElementById('cfg-welcome-subject');
+      const welcomeHtmlInput = document.getElementById('cfg-welcome-html');
+      const blogSubjectInput = document.getElementById('cfg-blog-subject');
+      const blogHtmlInput = document.getElementById('cfg-blog-html');
 
       if (apiKeyInput) apiKeyInput.value = apiKey;
       if (senderEmailInput) senderEmailInput.value = senderEmail;
       if (senderNameInput) senderNameInput.value = senderName;
+      if (welcomeSubjectInput) welcomeSubjectInput.value = welcomeSubject;
+      if (welcomeHtmlInput) welcomeHtmlInput.value = welcomeHtml;
+      if (blogSubjectInput) blogSubjectInput.value = blogSubject;
+      if (blogHtmlInput) blogHtmlInput.value = blogHtml;
     }
 
     document.getElementById('form-email-config').addEventListener('submit', async (e) => {
@@ -1603,12 +1666,20 @@
       const apiKey = document.getElementById('cfg-brevo-api-key').value.trim();
       const senderEmail = document.getElementById('cfg-brevo-sender-email').value.trim();
       const senderName = document.getElementById('cfg-brevo-sender-name').value.trim();
+      const welcomeSubject = document.getElementById('cfg-welcome-subject').value.trim();
+      const welcomeHtml = document.getElementById('cfg-welcome-html').value;
+      const blogSubject = document.getElementById('cfg-blog-subject').value.trim();
+      const blogHtml = document.getElementById('cfg-blog-html').value;
 
       try {
         const updates = [
           { key: 'brevo_api_key', value: apiKey },
           { key: 'brevo_sender_email', value: senderEmail },
-          { key: 'brevo_sender_name', value: senderName }
+          { key: 'brevo_sender_name', value: senderName },
+          { key: 'welcome_email_subject', value: welcomeSubject },
+          { key: 'welcome_email_html', value: welcomeHtml },
+          { key: 'blog_email_subject_template', value: blogSubject },
+          { key: 'blog_email_html_template', value: blogHtml }
         ];
 
         for (const item of updates) {
@@ -1618,10 +1689,30 @@
           if (error) throw error;
         }
 
-        showToast('Email configurations saved successfully!');
+        showToast('All email configurations saved successfully!');
         loadAllDashboardData();
       } catch (err) {
         showToast('Error saving email settings: ' + err.message, true);
+      }
+    });
+
+    // Send Test Welcome Email
+    document.getElementById('form-test-email').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const recipient = document.getElementById('test-recipient-email').value.trim();
+      if (!recipient) return;
+
+      showToast("Sending test email...");
+      try {
+        const { error } = await supabaseClient.rpc('send_test_email', {
+          test_email: recipient
+        });
+
+        if (error) throw error;
+        showToast("Test welcome email sent successfully!");
+      } catch (err) {
+        console.error("Test email sending failed:", err);
+        showToast("Failed to send test email: " + err.message, true);
       }
     });
 
