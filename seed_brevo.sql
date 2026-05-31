@@ -56,7 +56,7 @@ begin
           'to', jsonb_build_array(jsonb_build_object('email', NEW.email)),
           'subject', 'Welcome!',
           'htmlContent', '<html><body style="font-family:sans-serif;padding:30px;line-height:1.6;color:#1a1a1a;max-width:600px;margin:0 auto;"><p>Hey there,</p><p>Thanks for subscribing! Really glad to have you here.</p><p>I will be sharing updates about ZIVO, Clyxit, building progress, sales insights and more.</p><p>Talk soon,<br/><strong>Faisal</strong></p></body></html>'
-        )::text
+        )
       );
     exception when others then
       raise warning 'Failed to send welcome email: %', SQLERRM;
