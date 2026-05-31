@@ -128,39 +128,71 @@
       transform: translateX(100%);
     }
     
-    /* Central Name Container */
-    .intro-name {
+    /* Central Logo Container */
+    .intro-logo {
       position: relative;
       z-index: 2;
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
       justify-content: center;
-      gap: 0 24px;
-      padding: 20px;
-      text-align: center;
       transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1), transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
     }
-    #loader.hide .intro-name {
+    #loader.hide .intro-logo {
       opacity: 0;
-      transform: scale(1.1);
+      transform: scale(0.9);
     }
     
-    .intro-word {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(2.5rem, 6vw, 5.5rem);
-      font-weight: 800;
-      color: #ffffff;
-      line-height: 1;
+    /* Background rect scale-in animation */
+    .logo-bg {
       opacity: 0;
-      transform: translateY(40px) scale(0.95);
-      /* Easing curve for a snappy, confident entrance */
-      transition: opacity 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform-origin: center;
+      transform: scale(0.85);
+      animation: logoBgIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes logoBgIn {
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
     
-    /* Triggered word entrance states */
-    .intro-word.reveal-in {
-      opacity: 1;
-      transform: translateY(0) scale(1);
+    /* Staircase draw animation */
+    .staircase {
+      stroke-dasharray: 430;
+      stroke-dashoffset: 430;
+      animation: drawStaircase 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      animation-delay: 0.3s; /* starts after bg scales in */
+    }
+    @keyframes drawStaircase {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+    
+    /* Arrow stem draw animation */
+    .arrow-stem {
+      stroke-dasharray: 50;
+      stroke-dashoffset: 50;
+      animation: drawArrowStem 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      animation-delay: 1.7s; /* starts exactly after staircase draws */
+    }
+    @keyframes drawArrowStem {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+    
+    /* Arrow head draw animation */
+    .arrow-head {
+      stroke-dasharray: 70;
+      stroke-dashoffset: 70;
+      animation: drawArrowHead 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      animation-delay: 2.0s; /* starts after stem finishes */
+    }
+    @keyframes drawArrowHead {
+      to {
+        stroke-dashoffset: 0;
+      }
     }
 
     /* ====================================================================
@@ -904,10 +936,30 @@
   <div id="loader">
     <div class="loader-panel panel-left"></div>
     <div class="loader-panel panel-right"></div>
-    <div class="intro-name">
-      <span class="intro-word">Faisal</span>
-      <span class="intro-word">Ahmed</span>
-      <span class="intro-word">Shariff.</span>
+    <div class="intro-logo">
+      <svg class="logo-svg" viewBox="0 0 410 410" width="160" height="160">
+        <defs>
+          <linearGradient id="intro-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#141414"></stop>
+            <stop offset="100%" style="stop-color:#0a0a0a"></stop>
+          </linearGradient>
+          <linearGradient id="intro-line" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:rgba(255,255,255,0.5)"></stop>
+            <stop offset="100%" style="stop-color:rgba(255,255,255,1)"></stop>
+          </linearGradient>
+        </defs>
+        <!-- Background rect -->
+        <rect class="logo-bg" width="400" height="400" rx="88" fill="url(#intro-bg)" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"></rect>
+        
+        <!-- Staircase -->
+        <polyline class="staircase" points="85,315 85,238 158,238 158,170 228,170 228,108 298,108" fill="none" stroke="url(#intro-line)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></polyline>
+        
+        <!-- Arrow stem -->
+        <line class="arrow-stem" x1="298" y1="108" x2="332" y2="74" stroke="white" stroke-width="7" stroke-linecap="round"></line>
+        
+        <!-- Arrow head -->
+        <polyline class="arrow-head" points="302,72 334,72 334,104" fill="none" stroke="white" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></polyline>
+      </svg>
     </div>
   </div>
 
@@ -1704,31 +1756,22 @@
     /* ---- CINEMATIC INTRO LOADER CONTROL ---- */
     (function () {
       const loaderEl = document.getElementById('loader');
-      const words = document.querySelectorAll('.intro-word');
 
-      // Safety timeout: force loading to complete after 1.5s if Supabase is slow
+      // Safety timeout: force loading to complete after 3.5s if Supabase is slow
       setTimeout(() => {
         dataLoaded = true;
-      }, 1500);
+      }, 3500);
 
-      let wordAnimationsCompleted = false;
+      let logoAnimationCompleted = false;
 
-      // Confident, snappy word entrance sequence
-      words.forEach((word, idx) => {
-        setTimeout(() => {
-          word.classList.add('reveal-in');
-          if (idx === words.length - 1) {
-            // Once the final word is fully displayed
-            setTimeout(() => {
-              wordAnimationsCompleted = true;
-              checkRevealSite();
-            }, 500); // brief hold moment
-          }
-        }, 150 + idx * 300); // snappy 300ms staggered delay
-      });
+      // The logo drawing animation takes 2.5s. We hold for 500ms (total 3.0s)
+      setTimeout(() => {
+        logoAnimationCompleted = true;
+        checkRevealSite();
+      }, 3000);
 
       const checkInterval = setInterval(() => {
-        if (dataLoaded && wordAnimationsCompleted) {
+        if (dataLoaded && logoAnimationCompleted) {
           clearInterval(checkInterval);
           revealSite();
         }
