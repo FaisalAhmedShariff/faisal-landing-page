@@ -2648,72 +2648,21 @@
 
     // Brevo Email Notification System
     async function sendBlogNotification(postTitle, postSlug, postExcerpt) {
-      // 1. Fetch subscribers list
-      const { data: subscribers, error: subError } = await supabaseClient
-        .from('subscribers')
-        .select('email');
-      
-      if (subError) throw subError;
-      if (!subscribers || subscribers.length === 0) {
-        showToast('No subscribers to notify.');
-        return;
+      showToast("Queuing email notifications to all subscribers...");
+      try {
+        const { data, error } = await supabaseClient.rpc('send_blog_notification', {
+          post_title: postTitle,
+          post_slug: postSlug,
+          post_excerpt: postExcerpt,
+          base_url: window.location.origin
+        });
+
+        if (error) throw error;
+        showToast(`Successfully queued welcome emails for ${data} subscribers!`);
+      } catch (err) {
+        console.error('RPC send_blog_notification error:', err);
+        throw new Error(err.message || 'Failed to trigger backend notification RPC');
       }
-
-      // 2. Fetch Brevo secrets
-      const apiKey = secretsRaw.find(s => s.key === 'brevo_api_key')?.value || '';
-      const senderEmail = secretsRaw.find(s => s.key === 'brevo_sender_email')?.value || 'faashariff2829@gmail.com';
-      const senderName = secretsRaw.find(s => s.key === 'brevo_sender_name')?.value || 'Faisal Ahmed Shariff';
-
-      if (!apiKey) {
-        throw new Error('Brevo API key not found. Please configure it in Brevo Email Settings.');
-      }
-
-      showToast(`Sending emails to ${subscribers.length} subscribers...`);
-
-      // 3. Loop and send emails individually (personalized)
-      let successCount = 0;
-      const emailPromises = subscribers.map(async (sub) => {
-        try {
-          const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-            method: 'POST',
-            headers: {
-              'accept': 'application/json',
-              'content-type': 'application/json',
-              'api-key': apiKey
-            },
-            body: JSON.stringify({
-              sender: { name: senderName, email: senderEmail },
-              to: [{ email: sub.email }],
-              subject: `New post: ${postTitle}`,
-              htmlContent: `
-                <html>
-                <body style="font-family: sans-serif; padding: 24px; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; border: 1px solid #eee; border-radius: 8px;">
-                  <h2 style="color: #0059d1; font-size: 1.5rem; margin-top: 0;">${postTitle}</h2>
-                  <p style="font-style: italic; color: #666; margin-bottom: 20px; font-size: 1.05rem;">${postExcerpt}</p>
-                  <p>I just published a new blog post on my website. You can read the full article by clicking the link below:</p>
-                  <p style="margin: 32px 0; text-align: center;">
-                    <a href="${window.location.origin}/blog/?post=${postSlug}" style="background-color: #0059d1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Read Full Post</a>
-                  </p>
-                  <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-                  <p style="font-size: 0.8rem; color: #999; text-align: center;">You received this email because you subscribed to Faisal Ahmed Shariff's updates.</p>
-                </body>
-                </html>
-              `
-            })
-          });
-          if (response.ok) {
-            successCount++;
-          } else {
-            const errData = await response.json();
-            console.error('Brevo API error for ' + sub.email + ':', errData);
-          }
-        } catch (err) {
-          console.error('Error sending email to ' + sub.email + ':', err);
-        }
-      });
-
-      await Promise.all(emailPromises);
-      showToast(`Successfully sent notification to ${successCount} of ${subscribers.length} subscribers!`);
     }
 
     window.triggerManualNotification = async function(id) {
