@@ -30,7 +30,22 @@ alter table public.secrets enable row level security;
 drop policy if exists "Allow admin all on secrets" on public.secrets;
 create policy "Allow admin all on secrets" on public.secrets for all using (auth.role() = 'authenticated');
 
--- 3. Add subscribers to realtime if not already added
+-- 3. Create debug logs table to diagnose trigger execution issues
+create table if not exists public.debug_logs (
+  id uuid default uuid_generate_v4() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  message text,
+  api_key_status text,
+  error_detail text
+);
+
+alter table public.debug_logs enable row level security;
+
+drop policy if exists "Allow admin read on debug_logs" on public.debug_logs;
+create policy "Allow admin read on debug_logs" on public.debug_logs for select using (auth.role() = 'authenticated');
+create policy "Allow admin delete on debug_logs" on public.debug_logs for delete using (auth.role() = 'authenticated');
+
+-- 4. Add subscribers to realtime if not already added
 do $$
 begin
   alter publication supabase_realtime add table public.subscribers;
@@ -39,27 +54,41 @@ exception
   when others then null;
 end $$;
 
--- 4. Enable pg_net extension
+-- 5. Enable pg_net extension
 create extension if not exists pg_net;
 
--- 5. Welcome email trigger function
+-- 6. Welcome email trigger function with step-by-step diagnostic logging
 create or replace function public.handle_new_subscriber()
 returns trigger as $$
 declare
   api_key text;
   sender_email text;
   sender_name text;
+  log_id uuid;
+  post_response_id bigint;
 begin
+  -- Retrieve values from secrets table
   select value into api_key from public.secrets where key = 'brevo_api_key';
   select value into sender_email from public.secrets where key = 'brevo_sender_email';
   select value into sender_name from public.secrets where key = 'brevo_sender_name';
   
   if sender_email is null or sender_email = '' then sender_email := 'faisalahmedshariff@outlook.com'; end if;
   if sender_name is null or sender_name = '' then sender_name := 'Faisal Ahmed Shariff'; end if;
-  
+
+  -- Insert initial diagnostic log
+  insert into public.debug_logs (message, api_key_status)
+  values (
+    'Trigger started for email: ' || NEW.email,
+    'API Key length: ' || coalesce(length(api_key)::text, 'NULL') || 
+    ', Sender: ' || coalesce(sender_email, 'NULL') || 
+    ', Name: ' || coalesce(sender_name, 'NULL')
+  )
+  returning id into log_id;
+
+  -- Check if API key is loaded and execute HTTP POST
   if api_key is not null and api_key <> '' then
     begin
-      perform net.http_post(
+      select net.http_post(
         url := 'https://api.brevo.com/v3/smtp/email',
         headers := jsonb_build_object(
           'accept', 'application/json',
@@ -72,11 +101,25 @@ begin
           'subject', 'Welcome!',
           'htmlContent', '<html><body style="font-family:sans-serif;padding:30px;line-height:1.6;color:#1a1a1a;max-width:600px;margin:0 auto;"><p>Hey there,</p><p>Thanks for subscribing! Really glad to have you here.</p><p>I will be sharing updates about ZIVO, Clyxit, building progress, sales insights and more.</p><p>Talk soon,<br/><strong>Faisal</strong></p></body></html>'
         )
-      );
+      ) into post_response_id;
+      
+      update public.debug_logs 
+      set message = 'Trigger HTTP post queued successfully', 
+          error_detail = 'pg_net Response Request ID: ' || coalesce(post_response_id::text, 'none')
+      where id = log_id;
+      
     exception when others then
-      raise warning 'Failed to send welcome email: %', SQLERRM;
+      update public.debug_logs 
+      set message = 'Trigger HTTP post failed inside exception block', 
+          error_detail = 'SQL Error Code: ' || SQLSTATE || ' - Msg: ' || SQLERRM
+      where id = log_id;
     end;
+  else
+    update public.debug_logs 
+    set message = 'Trigger skipped: API Key is null or empty'
+    where id = log_id;
   end if;
+  
   return NEW;
 end;
 $$ language plpgsql security definer;
@@ -86,7 +129,7 @@ create trigger on_subscriber_created
   after insert on public.subscribers
   for each row execute function public.handle_new_subscriber();
 
--- 6. Blog post notification RPC function (called by Admin Dashboard securely to bypass CORS)
+-- 7. Blog post notification RPC function (called securely by Admin Dashboard to bypass CORS)
 create or replace function public.send_blog_notification(
   post_title text,
   post_slug text,
