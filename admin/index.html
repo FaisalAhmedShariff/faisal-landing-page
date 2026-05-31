@@ -794,6 +794,32 @@
               </div>
             </form>
           </div>
+
+          <!-- Brevo Email Settings Card -->
+          <div class="section-card">
+            <div class="card-title-bar">
+              <h2>Brevo Email Settings</h2>
+            </div>
+            <form id="form-email-config">
+              <div class="form-grid">
+                <div class="form-group span-full">
+                  <label class="form-label">Brevo API Key (SMTP v3)</label>
+                  <input type="password" id="cfg-brevo-api-key" placeholder="xkeysib-...">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Sender Email</label>
+                  <input type="email" id="cfg-brevo-sender-email" placeholder="faashariff2829@gmail.com">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Sender Name</label>
+                  <input type="text" id="cfg-brevo-sender-name" placeholder="Faisal Ahmed Shariff">
+                </div>
+              </div>
+              <div style="margin-top: 24px; text-align: right;">
+                <button type="submit" class="btn-primary">Save Email Settings</button>
+              </div>
+            </form>
+          </div>
         </div>
 
         <!-- 2. ABOUT BIO PANEL -->
@@ -1228,10 +1254,11 @@
     let aboutParagraphs = [];
     let currentTags = [];
     let newsletterSignups = [];
-    let signupsSortField = 'created_at';
+    let signupsSortField = 'subscribed_at';
     let signupsSortAsc = false;
     let realtimeChannel = null;
     let blogPostsRaw = [];
+    let secretsRaw = [];
     
     // Auth Listener on boot
     supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -1307,7 +1334,7 @@
           supabaseClient.from('timeline_entries').select('*').order('entry_date', { ascending: true, nullsFirst: false }).order('sort_order', { ascending: true }),
           supabaseClient.from('ventures').select('*').order('sort_order', { ascending: true }),
           supabaseClient.from('custom_sections').select('*').order('sort_order', { ascending: true }),
-          supabaseClient.from('newsletter_signups').select('*').order('created_at', { ascending: false }),
+          supabaseClient.from('subscribers').select('*').order('subscribed_at', { ascending: false }),
           supabaseClient.from('page_views').select('*', { count: 'exact', head: true }),
           supabaseClient.from('blog_posts').select('*').order('published_at', { ascending: false })
         ]);
@@ -1331,6 +1358,17 @@
         newsletterSignups = signupsRes.data;
         blogPostsRaw = postsRes.data;
 
+        // Fetch secrets table separately to fail-gracefully if it doesn't exist yet
+        secretsRaw = [];
+        try {
+          const secretsRes = await supabaseClient.from('secrets').select('*');
+          if (!secretsRes.error && secretsRes.data) {
+            secretsRaw = secretsRes.data;
+          }
+        } catch (secErr) {
+          console.warn('Secrets table could not be fetched:', secErr);
+        }
+
         // Populate Stats
         document.getElementById('stats-total-visitors').innerText = viewsRes.count || 0;
 
@@ -1342,6 +1380,7 @@
         populateCustomList(customRes.data);
         populateSignupsList();
         populateBlogList(postsRes.data);
+        populateEmailConfigForm();
         setupSignupsRealtime();
 
       } catch (err) {
@@ -1541,6 +1580,48 @@
         loadAllDashboardData();
       } catch (err) {
         showToast('Error saving configurations: ' + err.message, true);
+      }
+    });
+
+    // Save Brevo Email Settings
+    function populateEmailConfigForm() {
+      const apiKey = secretsRaw.find(s => s.key === 'brevo_api_key')?.value || '';
+      const senderEmail = secretsRaw.find(s => s.key === 'brevo_sender_email')?.value || '';
+      const senderName = secretsRaw.find(s => s.key === 'brevo_sender_name')?.value || '';
+
+      const apiKeyInput = document.getElementById('cfg-brevo-api-key');
+      const senderEmailInput = document.getElementById('cfg-brevo-sender-email');
+      const senderNameInput = document.getElementById('cfg-brevo-sender-name');
+
+      if (apiKeyInput) apiKeyInput.value = apiKey;
+      if (senderEmailInput) senderEmailInput.value = senderEmail;
+      if (senderNameInput) senderNameInput.value = senderName;
+    }
+
+    document.getElementById('form-email-config').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const apiKey = document.getElementById('cfg-brevo-api-key').value.trim();
+      const senderEmail = document.getElementById('cfg-brevo-sender-email').value.trim();
+      const senderName = document.getElementById('cfg-brevo-sender-name').value.trim();
+
+      try {
+        const updates = [
+          { key: 'brevo_api_key', value: apiKey },
+          { key: 'brevo_sender_email', value: senderEmail },
+          { key: 'brevo_sender_name', value: senderName }
+        ];
+
+        for (const item of updates) {
+          const { error } = await supabaseClient
+            .from('secrets')
+            .upsert({ key: item.key, value: item.value });
+          if (error) throw error;
+        }
+
+        showToast('Email configurations saved successfully!');
+        loadAllDashboardData();
+      } catch (err) {
+        showToast('Error saving email settings: ' + err.message, true);
       }
     });
 
@@ -2207,7 +2288,7 @@
         let valA = a[signupsSortField];
         let valB = b[signupsSortField];
         
-        if (signupsSortField === 'created_at') {
+        if (signupsSortField === 'subscribed_at') {
           valA = new Date(valA);
           valB = new Date(valB);
         } else {
@@ -2221,8 +2302,8 @@
       });
 
       // Update headers indicator
-      ['email', 'created_at', 'source_page'].forEach(field => {
-        const id = field === 'created_at' ? 'th-date' : (field === 'email' ? 'th-email' : 'th-page');
+      ['email', 'subscribed_at', 'source_page'].forEach(field => {
+        const id = field === 'subscribed_at' ? 'th-date' : (field === 'email' ? 'th-email' : 'th-page');
         const th = document.getElementById(id);
         if (th) {
           const indicator = signupsSortField === field ? (signupsSortAsc ? '▲' : '▼') : '↕';
@@ -2236,7 +2317,7 @@
       }
 
       tbody.innerHTML = sorted.map(sub => {
-        const dateStr = new Date(sub.created_at).toLocaleString();
+        const dateStr = new Date(sub.subscribed_at).toLocaleString();
         
         let cleanUrl = sub.source_page;
         try {
@@ -2274,7 +2355,7 @@
       if (!confirm('Are you sure you want to delete this subscriber?')) return;
       try {
         const { error } = await supabaseClient
-          .from('newsletter_signups')
+          .from('subscribers')
           .delete()
           .eq('id', id);
         if (error) throw error;
@@ -2305,10 +2386,10 @@
 
       if (dateHeader) {
         dateHeader.addEventListener('click', () => {
-          if (signupsSortField === 'created_at') {
+          if (signupsSortField === 'subscribed_at') {
             signupsSortAsc = !signupsSortAsc;
           } else {
-            signupsSortField = 'created_at';
+            signupsSortField = 'subscribed_at';
             signupsSortAsc = false;
           }
           populateSignupsList();
@@ -2349,7 +2430,7 @@
       let csvContent = "data:text/csv;charset=utf-8,";
       csvContent += "Email,Signed Up At,Source Page\n";
       newsletterSignups.forEach(sub => {
-        const dateStr = new Date(sub.created_at).toISOString();
+        const dateStr = new Date(sub.subscribed_at).toISOString();
         const row = `"${sub.email.replace(/"/g, '""')}","${dateStr}","${sub.source_page.replace(/"/g, '""')}"`;
         csvContent += row + "\n";
       });
@@ -2367,11 +2448,11 @@
       if (realtimeChannel) return;
       realtimeChannel = supabaseClient
         .channel('admin_signups_realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'newsletter_signups' }, async () => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'subscribers' }, async () => {
           const { data, error } = await supabaseClient
-            .from('newsletter_signups')
+            .from('subscribers')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('subscribed_at', { ascending: false });
           if (!error && data) {
             newsletterSignups = data;
             populateSignupsList();
@@ -2430,7 +2511,8 @@
                 <span>📅 Date: ${dateStr}</span>
               </div>
             </div>
-            <div class="crud-actions">
+            <div class="crud-actions" style="display: flex; gap: 8px;">
+              ${post.is_visible ? `<button class="btn-primary action-btn" onclick="triggerManualNotification('${post.id}')" style="background-color: var(--primary); color: #000; border-color: var(--primary); font-weight: 600;">Notify Subscribers</button>` : ''}
               <button class="btn-secondary action-btn" onclick="openEditBlog('${post.id}')">Edit</button>
               <button class="btn-danger action-btn" onclick="deleteBlogPost('${post.id}')">Delete</button>
             </div>
@@ -2531,6 +2613,14 @@
 
       if (id) payload.id = id;
 
+      // Check if newly visible (published)
+      const isNewlyPublished = (!id && isVisible) || (id && isVisible && !blogPostsRaw.find(p => p.id === id)?.is_visible);
+      
+      let sendNotification = false;
+      if (isNewlyPublished) {
+        sendNotification = confirm('This blog post is now visible/published. Would you like to send email notifications to all subscribers via Brevo?');
+      }
+
       try {
         const { error } = await supabaseClient
           .from('blog_posts')
@@ -2540,11 +2630,103 @@
 
         closeModal('modal-blog');
         showToast('Blog post saved successfully!');
+        
+        if (sendNotification) {
+          try {
+            await sendBlogNotification(title, slug, excerpt);
+          } catch (mailErr) {
+            console.error('Mail error:', mailErr);
+            showToast('Blog post saved, but failed to send email notifications: ' + mailErr.message, true);
+          }
+        }
+        
         loadAllDashboardData();
       } catch (err) {
         showToast('Error saving blog post: ' + err.message, true);
       }
     });
+
+    // Brevo Email Notification System
+    async function sendBlogNotification(postTitle, postSlug, postExcerpt) {
+      // 1. Fetch subscribers list
+      const { data: subscribers, error: subError } = await supabaseClient
+        .from('subscribers')
+        .select('email');
+      
+      if (subError) throw subError;
+      if (!subscribers || subscribers.length === 0) {
+        showToast('No subscribers to notify.');
+        return;
+      }
+
+      // 2. Fetch Brevo secrets
+      const apiKey = secretsRaw.find(s => s.key === 'brevo_api_key')?.value || '';
+      const senderEmail = secretsRaw.find(s => s.key === 'brevo_sender_email')?.value || 'faashariff2829@gmail.com';
+      const senderName = secretsRaw.find(s => s.key === 'brevo_sender_name')?.value || 'Faisal Ahmed Shariff';
+
+      if (!apiKey) {
+        throw new Error('Brevo API key not found. Please configure it in Brevo Email Settings.');
+      }
+
+      showToast(`Sending emails to ${subscribers.length} subscribers...`);
+
+      // 3. Loop and send emails individually (personalized)
+      let successCount = 0;
+      const emailPromises = subscribers.map(async (sub) => {
+        try {
+          const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+              'accept': 'application/json',
+              'content-type': 'application/json',
+              'api-key': apiKey
+            },
+            body: JSON.stringify({
+              sender: { name: senderName, email: senderEmail },
+              to: [{ email: sub.email }],
+              subject: `New post: ${postTitle}`,
+              htmlContent: `
+                <html>
+                <body style="font-family: sans-serif; padding: 24px; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; border: 1px solid #eee; border-radius: 8px;">
+                  <h2 style="color: #0059d1; font-size: 1.5rem; margin-top: 0;">${postTitle}</h2>
+                  <p style="font-style: italic; color: #666; margin-bottom: 20px; font-size: 1.05rem;">${postExcerpt}</p>
+                  <p>I just published a new blog post on my website. You can read the full article by clicking the link below:</p>
+                  <p style="margin: 32px 0; text-align: center;">
+                    <a href="${window.location.origin}/blog/?post=${postSlug}" style="background-color: #0059d1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Read Full Post</a>
+                  </p>
+                  <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+                  <p style="font-size: 0.8rem; color: #999; text-align: center;">You received this email because you subscribed to Faisal Ahmed Shariff's updates.</p>
+                </body>
+                </html>
+              `
+            })
+          });
+          if (response.ok) {
+            successCount++;
+          } else {
+            const errData = await response.json();
+            console.error('Brevo API error for ' + sub.email + ':', errData);
+          }
+        } catch (err) {
+          console.error('Error sending email to ' + sub.email + ':', err);
+        }
+      });
+
+      await Promise.all(emailPromises);
+      showToast(`Successfully sent notification to ${successCount} of ${subscribers.length} subscribers!`);
+    }
+
+    window.triggerManualNotification = async function(id) {
+      const post = blogPostsRaw.find(p => p.id === id);
+      if (!post) return;
+      if (!confirm(`Are you sure you want to send email notifications to all subscribers for "${post.title}"?`)) return;
+
+      try {
+        await sendBlogNotification(post.title, post.slug, post.excerpt);
+      } catch (err) {
+        showToast('Error sending notification: ' + err.message, true);
+      }
+    };
 
     // ====================================================================
     // PANEL H: INTERACTIVE CROPPER LOGIC

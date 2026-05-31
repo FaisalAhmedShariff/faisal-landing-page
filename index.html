@@ -137,8 +137,10 @@
     .staircase {
       stroke-dasharray: 430;
       stroke-dashoffset: 430;
-      animation: drawStaircase 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       animation-delay: 0.3s; /* starts after bg scales in */
+    }
+    .logo-svg.start-anim .staircase {
+      animation: drawStaircase 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
     @keyframes drawStaircase {
       to {
@@ -150,8 +152,10 @@
     .arrow-stem {
       stroke-dasharray: 50;
       stroke-dashoffset: 50;
-      animation: drawArrowStem 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       animation-delay: 1.7s; /* starts exactly after staircase draws */
+    }
+    .logo-svg.start-anim .arrow-stem {
+      animation: drawArrowStem 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
     @keyframes drawArrowStem {
       to {
@@ -163,8 +167,10 @@
     .arrow-head {
       stroke-dasharray: 70;
       stroke-dashoffset: 70;
-      animation: drawArrowHead 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       animation-delay: 2.0s; /* starts after stem finishes */
+    }
+    .logo-svg.start-anim .arrow-head {
+      animation: drawArrowHead 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
     @keyframes drawArrowHead {
       to {
@@ -1731,6 +1737,10 @@
     /* ---- CINEMATIC INTRO LOADER CONTROL ---- */
     (function () {
       const loaderEl = document.getElementById('loader');
+      if (!loaderEl) return;
+
+      const logoSvg = loaderEl.querySelector('.logo-svg');
+      const arrowHead = loaderEl.querySelector('.arrow-head');
 
       let windowLoaded = document.readyState === 'complete';
       if (!windowLoaded) {
@@ -1744,19 +1754,34 @@
         dataLoaded = true;
       }, 4500);
 
-      let logoAnimationCompleted = false;
+      // Start the drawing animation cycle by adding class
+      if (logoSvg) {
+        logoSvg.classList.add('start-anim');
+      }
 
-      // The logo drawing animation takes 2.5s. We hold for 500ms (total 3.0s)
-      setTimeout(() => {
-        logoAnimationCompleted = true;
-      }, 3000);
-
-      const checkInterval = setInterval(() => {
-        if (dataLoaded && logoAnimationCompleted && windowLoaded) {
-          clearInterval(checkInterval);
-          revealSite();
-        }
-      }, 50);
+      // Listen for the arrowhead drawing animation to complete (signifying a full loop cycle)
+      if (arrowHead && logoSvg) {
+        arrowHead.addEventListener('animationend', (event) => {
+          if (event.animationName === 'drawArrowHead') {
+            if (dataLoaded && windowLoaded) {
+              revealSite();
+            } else {
+              // Repeat the cycle: remove class, force layout reflow, and re-add class
+              logoSvg.classList.remove('start-anim');
+              void logoSvg.offsetWidth;
+              logoSvg.classList.add('start-anim');
+            }
+          }
+        });
+      } else {
+        // Fallback check interval if elements are not found
+        const checkInterval = setInterval(() => {
+          if (dataLoaded && windowLoaded) {
+            clearInterval(checkInterval);
+            revealSite();
+          }
+        }, 100);
+      }
 
       function revealSite() {
         // Step 1: Fade the logo centerpiece out to solid black
@@ -1865,7 +1890,7 @@
         try {
           const sourcePage = window.location.href;
           const { error } = await supabaseClient
-            .from('newsletter_signups')
+            .from('subscribers')
             .insert([{ email, source_page: sourcePage }]);
 
           if (error) throw error;
