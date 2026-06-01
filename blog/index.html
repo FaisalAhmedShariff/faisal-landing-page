@@ -212,11 +212,35 @@
     }
 
     .blog-nav-link {
-      font-size: 0.95rem;
-      color: var(--fg-muted);
-      transition: color 0.2s, transform 0.2s;
+      font-size: 0.88rem;
+      color: var(--fg);
       text-decoration: none;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .blog-nav-link:hover {
+      background: var(--primary-dim);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(74, 240, 196, 0.15);
+      color: var(--fg);
+    }
+    html.light .blog-nav-link {
+      background: rgba(255, 255, 255, 0.4);
+      border-color: rgba(10, 14, 20, 0.12);
+    }
+    html.light .blog-nav-link:hover {
+      background: var(--primary-dim);
+      border-color: var(--primary);
+      box-shadow: 0 8px 24px rgba(0, 89, 209, 0.12);
     }
     .founder-part {
       font-family: 'Space Grotesk', sans-serif;
@@ -229,10 +253,37 @@
       font-weight: 400;
       text-transform: none;
     }
-    .blog-nav-link:hover {
-      color: var(--fg);
-      transform: translateY(-1px);
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--primary);
+      border-radius: 50%;
+      position: relative;
+      display: inline-block;
     }
+    .pulse-dot::after {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      border: 1.5px solid var(--primary);
+      border-radius: 50%;
+      animation: navPulse 1.8s infinite ease-in-out;
+      opacity: 0;
+    }
+    @keyframes navPulse {
+      0% {
+        transform: scale(0.6);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(2.2);
+        opacity: 0;
+      }
+    }
+
 
     /* ====================================================================
        MOBILE NAV MENU
@@ -516,7 +567,7 @@
     </nav>
 
     <div style="display: flex; align-items: center; gap: 24px; justify-self: end;">
-      <a href="/blog/" class="blog-nav-link"><span class="founder-part">Founder</span> <span class="notes-part">Notes</span></a>
+      <a href="/blog/" class="blog-nav-link"><span class="pulse-dot"></span><span class="founder-part">Founder</span> <span class="notes-part">Notes</span></a>
       <button class="hamburger" id="hamburger" aria-label="Open menu">
         <span></span><span></span>
       </button>
@@ -530,7 +581,7 @@
     <a href="/#updates-section" class="mobile-nav-link">updates</a>
     <a href="/#ventures-section" class="mobile-nav-link">ventures</a>
     <a href="/#contact-section" class="mobile-nav-link">contact</a>
-    <a href="/blog/"             class="mobile-nav-link blog-mobile-link"><span class="founder-part">Founder</span> <span class="notes-part">Notes</span></a>
+    <a href="/blog/"             class="mobile-nav-link blog-mobile-link" style="display: inline-flex; align-items: center; gap: 12px;"><span class="pulse-dot" style="width: 12px; height: 12px; margin-top: 4px;"></span><span class="founder-part">Founder</span> <span class="notes-part">Notes</span></a>
   </div>
 
   <!-- FLOATING: Day/Night — bottom left -->
