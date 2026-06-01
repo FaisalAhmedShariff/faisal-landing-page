@@ -598,7 +598,13 @@
       try {
         const [configRes, postsRes] = await Promise.all([
           supabaseClient.from('portfolio_config').select('*'),
-          supabaseClient.from('blog_posts').select('*').eq('is_visible', true).order('published_at', { ascending: false })
+          supabaseClient.from('blog_posts')
+            .select('*')
+            .eq('is_visible', true)
+            .lte('published_at', new Date().toISOString())
+            .order('is_pinned', { ascending: false })
+            .order('pin_order', { ascending: true, nullsFirst: false })
+            .order('published_at', { ascending: false })
         ]);
 
         if (configRes.error) throw configRes.error;
@@ -693,9 +699,21 @@
             year: 'numeric', month: 'long', day: 'numeric'
           });
           const delayClass = i % 3 === 1 ? 'reveal-delay-1' : (i % 3 === 2 ? 'reveal-delay-2' : '');
+          const pinBadge = post.is_pinned 
+            ? `<span style="color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 4px; font-family: sans-serif; font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase;">
+                <span style="font-size: 0.85rem; line-height: 1;">📌</span> Pinned
+               </span>` 
+            : '';
+          const cardStyle = post.is_pinned
+            ? `border-top: 2px solid var(--primary); background: linear-gradient(180deg, rgba(74, 240, 196, 0.03) 0%, var(--card-bg) 100%);`
+            : '';
+
           return `
-            <a href="?post=${post.slug}" class="blog-card reveal ${delayClass}">
-              <div class="blog-card-date">${dateStr}</div>
+            <a href="?post=${post.slug}" class="blog-card reveal ${delayClass}" style="${cardStyle}">
+              <div class="blog-card-date" style="display: flex; align-items: center; justify-content: space-between;">
+                <span>${dateStr}</span>
+                ${pinBadge}
+              </div>
               <h2 class="blog-card-title">${escapeHtml(post.title)}</h2>
               <p class="blog-card-excerpt">${escapeHtml(post.excerpt)}</p>
               <span class="blog-card-link">
@@ -731,6 +749,9 @@
             .from('blog_posts')
             .select('*')
             .eq('is_visible', true)
+            .lte('published_at', new Date().toISOString())
+            .order('is_pinned', { ascending: false })
+            .order('pin_order', { ascending: true, nullsFirst: false })
             .order('published_at', { ascending: false });
           if (!error && data) {
             blogPosts = data;
