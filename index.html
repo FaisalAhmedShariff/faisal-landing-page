@@ -1749,10 +1749,11 @@
         });
       }
 
-      // Safety timeout: force loading to complete after 4.5s if Supabase is slow
+      // Safety timeout: force loading flags to complete after 3.2s to prevent getting stuck on slow assets
       setTimeout(() => {
         dataLoaded = true;
-      }, 4500);
+        windowLoaded = true;
+      }, 3200);
 
       // Start the drawing animation cycle by adding class
       if (logoSvg) {
@@ -1773,17 +1774,18 @@
             }
           }
         });
-      } else {
-        // Fallback check interval if elements are not found
-        const checkInterval = setInterval(() => {
-          if (dataLoaded && windowLoaded) {
-            clearInterval(checkInterval);
-            revealSite();
-          }
-        }, 100);
       }
 
+      // Absolute watchdog safety: force reveal site after 5s under any conditions
+      setTimeout(() => {
+        revealSite();
+      }, 5000);
+
+      let revealed = false;
       function revealSite() {
+        if (revealed) return;
+        revealed = true;
+
         // Step 1: Fade the logo centerpiece out to solid black
         loaderEl.classList.add('fade-logo');
 
