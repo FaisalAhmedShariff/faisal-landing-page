@@ -1248,12 +1248,16 @@
             <textarea id="blog-content" rows="12" required placeholder="<p>Write your post content here...</p>&#10;&#10;<h2>Section Heading</h2>&#10;<p>Add details...</p>"></textarea>
           </div>
           <div class="form-group">
-            <label class="form-label">Publish Date</label>
-            <input type="datetime-local" id="blog-published-at" required>
+            <label class="form-label">Publishing Option</label>
+            <select id="blog-publish-option" onchange="togglePublishOptionFields()" required>
+              <option value="immediate">Publish Immediately</option>
+              <option value="scheduled">Schedule for Later</option>
+              <option value="draft">Save as Draft (Private)</option>
+            </select>
           </div>
-          <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 24px;">
-            <input type="checkbox" id="blog-is-visible" checked style="width: auto;">
-            <label class="form-label" for="blog-is-visible" style="margin-bottom: 0;">Visible / Published</label>
+          <div class="form-group" id="blog-schedule-time-container" style="display: none;">
+            <label class="form-label">Scheduled Date & Time</label>
+            <input type="datetime-local" id="blog-published-at">
           </div>
         </div>
         <div style="margin-top: 28px; display: flex; justify-content: flex-end; gap: 12px;">
@@ -2754,6 +2758,20 @@
       }
     };
 
+    window.togglePublishOptionFields = function() {
+      const option = document.getElementById('blog-publish-option').value;
+      const container = document.getElementById('blog-schedule-time-container');
+      const timeInput = document.getElementById('blog-published-at');
+      
+      if (option === 'scheduled') {
+        container.style.display = 'block';
+        timeInput.setAttribute('required', 'required');
+      } else {
+        container.style.display = 'none';
+        timeInput.removeAttribute('required');
+      }
+    };
+
     // Open blog post modal for editing
     window.openEditBlog = function(id) {
       const post = blogPostsRaw.find(p => p.id === id);
@@ -2771,7 +2789,16 @@
       const localISOTime = (new Date(dateObj - tzOffset)).toISOString().slice(0, 16);
       document.getElementById('blog-published-at').value = localISOTime;
       
-      document.getElementById('blog-is-visible').checked = post.is_visible;
+      const publishOptionSelect = document.getElementById('blog-publish-option');
+      if (!post.is_visible) {
+        publishOptionSelect.value = 'draft';
+      } else if (dateObj > new Date()) {
+        publishOptionSelect.value = 'scheduled';
+      } else {
+        publishOptionSelect.value = 'immediate';
+      }
+      
+      togglePublishOptionFields();
 
       document.getElementById('modal-blog-title').innerText = 'Edit Blog Post';
       openModal('modal-blog');
@@ -2804,6 +2831,9 @@
       const localISOTime = (new Date(dateObj - tzOffset)).toISOString().slice(0, 16);
       document.getElementById('blog-published-at').value = localISOTime;
 
+      document.getElementById('blog-publish-option').value = 'immediate';
+      togglePublishOptionFields();
+
       document.getElementById('modal-blog-title').innerText = 'Create Blog Post';
       openModal('modal-blog');
     });
@@ -2817,8 +2847,23 @@
       const slug = document.getElementById('blog-slug').value.trim();
       const excerpt = document.getElementById('blog-excerpt').value.trim();
       const content = document.getElementById('blog-content').value.trim();
-      const publishedAt = new Date(document.getElementById('blog-published-at').value).toISOString();
-      const isVisible = document.getElementById('blog-is-visible').checked;
+      
+      const publishOption = document.getElementById('blog-publish-option').value;
+      
+      let isVisible = false;
+      let publishedAt = '';
+
+      if (publishOption === 'immediate') {
+        isVisible = true;
+        publishedAt = new Date().toISOString();
+      } else if (publishOption === 'scheduled') {
+        isVisible = true;
+        publishedAt = new Date(document.getElementById('blog-published-at').value).toISOString();
+      } else if (publishOption === 'draft') {
+        isVisible = false;
+        const originalPost = id ? blogPostsRaw.find(p => p.id === id) : null;
+        publishedAt = originalPost ? originalPost.published_at : new Date().toISOString();
+      }
 
       const payload = {
         title,
