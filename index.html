@@ -1579,10 +1579,24 @@
         }
         const aboutWrap = document.getElementById('about-paragraphs-wrap');
         if (aboutWrap && aboutRes.data.length > 0) {
-          aboutWrap.innerHTML = aboutRes.data.map((p, idx) => {
-            const delayClass = idx <= 4 ? `reveal-delay-${idx}` : '';
-            return `<p class="reveal ${delayClass}">${p.text}</p>`;
-          }).join('');
+          if (aboutRes.data.length === 1) {
+            const text = aboutRes.data[0].text;
+            if (/<\/?(p|br|div|ul|ol|li|h[1-6])\b/i.test(text)) {
+              aboutWrap.innerHTML = `<div class="reveal">${text}</div>`;
+            } else {
+              // Split by double newlines and wrap in paragraphs
+              const paras = text.split(/\n\s*\n/).map(p => p.trim()).filter(p => p !== '');
+              aboutWrap.innerHTML = paras.map((p, idx) => {
+                const delayClass = idx <= 4 ? `reveal-delay-${idx}` : '';
+                return `<p class="reveal ${delayClass}">${p}</p>`;
+              }).join('');
+            }
+          } else {
+            aboutWrap.innerHTML = aboutRes.data.map((p, idx) => {
+              const delayClass = idx <= 4 ? `reveal-delay-${idx}` : '';
+              return `<p class="reveal ${delayClass}">${p.text}</p>`;
+            }).join('');
+          }
         }
 
         // 3. Render Updates & Dynamic Timeline
