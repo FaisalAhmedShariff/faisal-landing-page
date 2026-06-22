@@ -42,7 +42,7 @@
       --fg-muted: rgba(10, 14, 20, 0.75);
       --fg-light: rgba(10, 14, 20, 0.52);
       --border: rgba(10, 14, 20, 0.12);
-      --card-bg: #ffffff;
+      --card-bg: rgba(255, 255, 255, 0.35);
       --primary: #0059d1;
       --primary-dim: rgba(0, 89, 209, 0.10);
       --photo-shadow: 0 0 0 3px rgba(0, 89, 209, 0.18), 0 28px 64px rgba(0, 0, 0, 0.14);
@@ -410,6 +410,8 @@
       cursor: pointer;
       text-decoration: none;
       color: inherit;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
     .blog-card:hover {
       transform: translateY(-3px);
