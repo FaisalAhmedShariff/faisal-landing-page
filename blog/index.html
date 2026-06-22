@@ -462,6 +462,130 @@
       section { padding: 90px 20px 60px; }
       footer { flex-direction: column; gap: 8px; text-align: center; padding: 20px; }
     }
+
+    /* ---- NEWSLETTER POPUP MODAL ---- */
+    .newsletter-popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+    .newsletter-popup-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    .newsletter-popup-content {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 48px 36px;
+      border-radius: 24px;
+      max-width: 460px;
+      width: 90%;
+      position: relative;
+      text-align: center;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+      transform: scale(0.92);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .newsletter-popup-overlay.show .newsletter-popup-content {
+      transform: scale(1);
+    }
+    .newsletter-popup-close {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      background: none;
+      border: none;
+      color: var(--fg-muted);
+      font-size: 28px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      transition: color 0.2s, transform 0.2s;
+    }
+    .newsletter-popup-close:hover {
+      color: var(--fg);
+      transform: scale(1.15);
+    }
+    .newsletter-popup-content h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.2rem;
+      margin-bottom: 12px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      color: var(--fg);
+    }
+    .newsletter-popup-content p {
+      font-size: 0.95rem;
+      color: var(--fg-muted);
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+    .popup-signup-form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .popup-signup-form input[type="email"] {
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 48px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .popup-signup-form input[type="email"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-dim);
+    }
+    .popup-signup-form .btn-solid {
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 48px;
+      background: var(--primary);
+      border: 1.5px solid var(--primary);
+      color: var(--btn-text);
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.3s, border-color 0.3s, transform 0.2s, color 0.3s;
+    }
+    .popup-signup-form .btn-solid:hover {
+      background: transparent;
+      color: var(--primary);
+      transform: translateY(-2px);
+    }
+    .popup-message {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      min-height: 20px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .popup-message.success {
+      color: var(--primary);
+      opacity: 1;
+    }
+    .popup-message.error {
+      color: #ff5e5e;
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -916,6 +1040,7 @@
     // Run fetching data immediately
     loadBlogData();
     setupRealtime();
+    setupNewsletterPopup();
 
     const headerEl = document.querySelector('header');
     window.addEventListener('scroll', () => {
@@ -925,6 +1050,136 @@
         headerEl.classList.remove('scrolled');
       }
     });
+
+    // Newsletter Popup timed trigger
+    async function setupNewsletterPopup() {
+      // 1. Skip if administrator
+      if (localStorage.getItem('faisal_admin_mode') === 'true') {
+        return;
+      }
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session && session.user && session.user.email === 'faashariff2829@gmail.com') {
+          localStorage.setItem('faisal_admin_mode', 'true');
+          return;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+
+      // 2. Skip if shown/dismissed in last 7 days
+      const lastShown = localStorage.getItem('faisal_newsletter_popup_dismissed_time');
+      if (lastShown) {
+        const diff = Date.now() - parseInt(lastShown, 10);
+        if (diff < 7 * 24 * 60 * 60 * 1000) {
+          return;
+        }
+      }
+
+      // 3. Trigger popup after 15 seconds
+      setTimeout(() => {
+        showNewsletterPopup();
+      }, 15000);
+    }
+
+    function showNewsletterPopup() {
+      const popup = document.getElementById('newsletter-popup');
+      if (!popup) return;
+
+      // Mark as shown immediately
+      localStorage.setItem('faisal_newsletter_popup_dismissed_time', Date.now().toString());
+
+      popup.classList.add('show');
+
+      // Dismiss triggers
+      const closeBtn = document.getElementById('btn-close-popup');
+      const closePopup = () => {
+        popup.classList.remove('show');
+      };
+      
+      closeBtn.addEventListener('click', closePopup);
+      popup.addEventListener('click', (e) => {
+        if (e.target === popup) {
+          closePopup();
+        }
+      });
+
+      // Form submission
+      const form = document.getElementById('popup-signup-form');
+      const emailInput = document.getElementById('popup-email-input');
+      const msgDiv = document.getElementById('popup-message');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = emailInput.value.trim();
+        if (!email) return;
+
+        emailInput.disabled = true;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerText = 'Submitting...';
+        }
+
+        msgDiv.className = 'popup-message';
+        msgDiv.innerText = '';
+        msgDiv.style.opacity = '1';
+
+        try {
+          // Format source page path nicely
+          let sourcePage = window.location.pathname;
+          const urlParams = new URLSearchParams(window.location.search);
+          const postSlug = urlParams.get('post');
+          if (postSlug) {
+            sourcePage = `/founders-notes/${postSlug}`;
+          } else if (sourcePage === '/' || sourcePage.endsWith('/index.html')) {
+            sourcePage = 'Home';
+          } else if (sourcePage.includes('/blog')) {
+            sourcePage = 'Founder Notes List';
+          }
+
+          const { error } = await supabaseClient
+            .from('subscribers')
+            .insert([{ email, source_page: sourcePage }]);
+
+          if (error) throw error;
+
+          msgDiv.classList.add('success');
+          msgDiv.innerText = 'Successfully subscribed!';
+          form.reset();
+
+          // Auto close after 1.5 seconds
+          setTimeout(() => {
+            closePopup();
+          }, 1500);
+        } catch (err) {
+          console.error('Popup subscription error:', err);
+          msgDiv.classList.add('error');
+          msgDiv.innerText = 'Error submitting. Please try again.';
+          emailInput.disabled = false;
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Count Me In';
+          }
+        }
+      });
+    }
   </script>
+
+  <!-- =================================================================
+       NEWSLETTER POPUP MODAL
+  ================================================================== -->
+  <div id="newsletter-popup" class="newsletter-popup-overlay">
+    <div class="newsletter-popup-content">
+      <button class="newsletter-popup-close" id="btn-close-popup" aria-label="Close popup">&times;</button>
+      <h2>Stay in the loop</h2>
+      <p>Sign up to get notified on new ventures, building progress, and engineering logs.</p>
+      <form id="popup-signup-form" class="popup-signup-form">
+        <input type="email" id="popup-email-input" placeholder="Enter your email" required />
+        <button type="submit" class="btn-solid">Count Me In</button>
+      </form>
+      <div id="popup-message" class="popup-message"></div>
+    </div>
+  </div>
 </body>
 </html>
