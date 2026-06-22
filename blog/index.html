@@ -465,12 +465,18 @@
 
     /* ---- NEWSLETTER POPUP MODAL ---- */
     .newsletter-popup-overlay {
+      --popup-overlay: rgba(0, 0, 0, 0.75);
+      --popup-bg: rgba(19, 23, 28, 0.85);
+      --popup-border: rgba(255, 255, 255, 0.08);
+      --popup-input-bg: rgba(255, 255, 255, 0.02);
+      --popup-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.7);
+      background: var(--popup-overlay);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       display: flex;
@@ -481,20 +487,29 @@
       visibility: hidden;
       transition: opacity 0.4s ease, visibility 0.4s ease;
     }
+    :root.light .newsletter-popup-overlay {
+      --popup-overlay: rgba(255, 255, 255, 0.45);
+      --popup-bg: rgba(255, 255, 255, 0.75);
+      --popup-border: rgba(0, 0, 0, 0.08);
+      --popup-input-bg: rgba(0, 0, 0, 0.02);
+      --popup-shadow: 0 30px 60px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    }
     .newsletter-popup-overlay.show {
       opacity: 1;
       visibility: visible;
     }
     .newsletter-popup-content {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
+      background: var(--popup-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--popup-border);
       padding: 48px 36px;
       border-radius: 24px;
       max-width: 460px;
       width: 90%;
       position: relative;
       text-align: center;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+      box-shadow: var(--popup-shadow);
       transform: scale(0.92);
       transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -541,8 +556,8 @@
       width: 100%;
       padding: 14px 20px;
       border-radius: 48px;
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--popup-border);
+      background: var(--popup-input-bg);
       color: var(--fg);
       font-family: inherit;
       font-size: 0.95rem;
